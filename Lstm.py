@@ -14,15 +14,16 @@ import numpy as np
 import random
 import sys
 
-from mecab_test import get_words
+# mylib
+from Const import Const
 
-
-class Lstm():
+class Lstm(Const):
     def __init__(self):
+        super().__init__()
         self.window_size = 1
 
     def input_len_set(self,worddict_len,window_size):
-        self.input_len = word_f * window_size
+        self.input_len = self.word_feat_len * window_size
         self.output_len = 3000
         self.hidden_neurons = 5000
         # self.input_len = worddict_len * window_size
