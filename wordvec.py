@@ -3,53 +3,64 @@
 import gensim
 from gensim.models import word2vec
 #from gensim import models as mod
-
+import pylab as plt
 
 import numpy as np
 
-class myword2vec():
+# mylib
+from Const import Const
+
+
+class MyWord2Vec(Const):
     def __init__(self):
-        self.fname="./aozora_text/files_all.txt"
+        super().__init__()
 
-    def train(self):
-        sentences = gensim.models.word2vec.Text8Corpus(self.fname)
+    def train(self,fname):
+        sentences = gensim.models.word2vec.Text8Corpus(fname)
         #model = gensim.models.word2vec.Word2Vec(sentences, size=200, window=5, workers=4, min_count=5)
-
-        self.model = gensim.models.word2vec.Word2Vec(sentences, size=200, window=5, workers=4, min_count=1)
-        self.model.save("./model/text8.model")
+        self.model = gensim.models.word2vec.Word2Vec(sentences, size=self.word_feat_len, window=5, workers=4, min_count=1)
+        # self.model.save("./model/text8.model")
+        self.model.save("./model/text8_yumeno.model")
 
     def load_model(self):
         # 読み込み
-        self.load_model = word2vec.Word2Vec.load("./model/text8.model")
+        # self.model = word2vec.Word2Vec.load("./model/text8.model")
+        self.model = word2vec.Word2Vec.load("./model/text8_yumeno.model")
 
 
     def get_vector(self,st):
-        # ベクトル表示
-        # print(self.load_model[st])
-        # print(self.load_model[st].shape)
         return self.model.wv[st]
 
 
     def get_similar(self,st,top):
         # 類似ワード出力
-        results = self.load_model.most_similar(positive=st, topn=top)
+        results = self.model.most_similar(positive=st, topn=top)
         for result in results:
             print(result[0], '\t', result[1])
 
-    def get_word(self):pass
+    def get_word(self,vec):
+        return self.model.most_similar( [ vec ], [], 1)[0][0]
 
+def plot(vec):
+    t = range(len(vec))
+    plt.plot(t,vec)
+    plt.show()
 
 def main():
-    net = myword2vec()
-    net.load_model()
-    net.train()
-    vec = net.get_vector("彼")
-    vec = np.array(vec, dtype='f')
+    net = MyWord2Vec()
 
-    print("vec",vec)
-    word = net.model.most_similar( [ vec ], [], 1)
-    print("word",word)
-    
+    net.train("./aozora_text/files_all.txt")
+    #net.load_model()
+    # vec = net.get_vector("博士")
+    # vec = net.get_vector("明智")
+    vec = net.get_vector("怪盗")
+    # print(vec)
+    plot(vec)
+
+    # vec = np.array(vec,dtype='f')
+    # word = net.get_word(vec)
+    # print("word",word)
+
     #net.get_word()
 
 if __name__ == "__main__":

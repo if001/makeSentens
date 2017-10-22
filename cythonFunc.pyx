@@ -13,54 +13,6 @@ import numpy as np
 pyximport.install(setup_args={'include_dirs': np.get_include()})
 from tqdm import tqdm #プログレスバー
 
-
-# def makeTrainDataWord2Vec(input_word_lists,word_dict,window_size):
-# #def makeTrainDataWord2Vec(input_len,word_dict,word_lists,window):
-#     print("cython!! make one hot vector for word2vec train!! ")
-
-#     train_x =[]
-#     train_y =[]
-#     cdef int i = 0
-#     cdef int j = 0
-#     cdef int ls,le
-#     cdef int input_word_lists_len = len(input_word_lists)
-#     cdef int word_dict_len = len(word_dict)
-
-#     for i in range(word_lists_len):
-#         sys.stdout.write("\r%d" % i)
-#         sys.stdout.flush()
-
-#         tmp_train_x = np.zeros(input_len)
-#         tmp_train_y = np.zeros(0)
-
-#         tmp_train_x = np.zeros(input_len, dtype=np.float64)
-#         tmp_train_y = np.zeros(0, dtype=np.float64)
-
-#         # for train x
-#         tmp_train_x[np.where(word_dict == word_lists[i])] = 1
-#         train_x.append(tmp_train_x)
-
-#         # for train y
-#         if window == 0:
-#             ls = 0
-#             le = 1
-#         else:
-#             ls = -window
-#             le = window + 1
-
-#         for j in range(ls,le):
-#             tmp_tmp_train_y = np.zeros(word_dict_len)
-#             if (( i + j ) > 0) and ((i + j) < len(word_lists)):
-#                 tmp_tmp_train_y[np.where(word_dict == word_lists[i+j])] = 1
-#             tmp_train_y.append(tmp_tmp_train_y)
-
-#         train_y.append(tmp_train_y)
-
-#     return train_x,train_y
-
-
-
-
 import re
 import sys
 def readfile_for_word2vec(fname):
@@ -81,6 +33,26 @@ def readfile_for_word2vec(fname):
         print("not such file")
         sys.exit(0)
 
+
+def readfile_to_sentens(fname):
+    cdef int i = 0
+    try:
+        wordlists = []
+        with open('./'+fname,'r') as file:
+            for line in file :
+                sys.stdout.write("\r done readfile to make word list : %d" % i)
+                sys.stdout.flush()
+                i += 1
+                line = re.sub(r'\n', "", line)
+                if len(line) != 0:
+                    sentens = line.split("。")[0]
+                    sentens += "。"
+                    wordlists.append(sentens.split(" "))
+        return wordlists
+
+    except:
+        print("not such file")
+        sys.exit(0)
 
 
 

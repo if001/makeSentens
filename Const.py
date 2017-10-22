@@ -5,9 +5,16 @@ import pylab as plt
 
 class Const():
     def __init__(self):
-        self.word_feat_len = 3000
-        self.batch_size = 2
-        self.learning_num = 100
+        self.word_feat_len = 500
+        # self.batch_size = 3000
+        self.batch_size = 2500
+        self.learning_num = 5
+        self.seq_num = 40
+        self.seq2seq_wait_save_dir = './wait/param_make_sentens_seq2seq_rnp.hdf5'
+        # self.seq2seq_wait_save_dir = './wait/param_make_sentens_seq2seq_ymn.hdf5'
+        self.dict_dir = './dictionaly/dict.txt'
+        self.dict_train_file = './aozora_text/files_all.txt'
+        # self.dict_train_file = './aozora_text2/files_all.txt'
 
     def glaph_plot(self,data):
         t = range(len(data))
