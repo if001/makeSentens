@@ -15,17 +15,16 @@ class MyWord2Vec(Const):
     def __init__(self):
         super().__init__()
 
-    def train(self,fname):
+    def train(self,fname,saveflag="save"):
         sentences = gensim.models.word2vec.Text8Corpus(fname)
         #model = gensim.models.word2vec.Word2Vec(sentences, size=200, window=5, workers=4, min_count=5)
         self.model = gensim.models.word2vec.Word2Vec(sentences, size=self.word_feat_len, window=5, workers=4, min_count=1)
-        # self.model.save("./model/text8.model")
-        self.model.save("./model/text8_yumeno.model")
+        if saveflag == "save":
+            self.model.save(self.word2vec_wait)
 
     def load_model(self):
         # 読み込み
-        # self.model = word2vec.Word2Vec.load("./model/text8.model")
-        self.model = word2vec.Word2Vec.load("./model/text8_yumeno.model")
+        self.model = word2vec.Word2Vec.load(self.word2vec_wait)
 
 
     def get_vector(self,st):
@@ -48,8 +47,10 @@ def plot(vec):
 
 def main():
     net = MyWord2Vec()
+    const = Const()
 
-    net.train("./aozora_text/files_all.txt")
+    net.train(const.dict_train_file,"not save")
+
     #net.load_model()
     # vec = net.get_vector("博士")
     # vec = net.get_vector("明智")

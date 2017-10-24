@@ -24,8 +24,6 @@ from Const import Const
 class Seq2Seq(Const):
     def __init__(self):
         super().__init__()
-        # self.word_dim = self.word_feat_len
-        # self.input_length = self.seq_num
         self.input_word_num = 1
         self.hidden_dim = 7000
 
