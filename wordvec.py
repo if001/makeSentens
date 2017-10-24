@@ -3,6 +3,7 @@
 import gensim
 from gensim.models import word2vec
 #from gensim import models as mod
+
 import pylab as plt
 
 import numpy as np
@@ -29,7 +30,6 @@ class MyWord2Vec(Const):
 
     def get_vector(self,st):
         return self.model.wv[st]
-
 
     def get_similar(self,st,top):
         # 類似ワード出力

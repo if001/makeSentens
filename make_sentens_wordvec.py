@@ -33,7 +33,10 @@ from itertools import chain #配列ふらっと化
 
 
 # mylib
+<<<<<<< HEAD
 from wordvec import MyWord2Vec
+=======
+>>>>>>> 4ffc0a954cb20e688078c8d8e03b934a051fe64e
 from MyWord2Vec import myWord2Vec 
 from MyVec2Word import myVec2Word
 from Lstm import Lstm
@@ -108,6 +111,7 @@ def main():
 
     # ---- 新しく辞書作る場合 -----    
     rnp_model.getWordLists()
+
     # rnp_model.getDict()
     # rnp_model.dictController("save")
     # ---- 新しく辞書作る場合 -----

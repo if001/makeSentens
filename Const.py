@@ -5,6 +5,7 @@ import pylab as plt
 
 class Const():
     def __init__(self):
+
         self.word_feat_len = 500
         # self.batch_size = 3000
         self.batch_size = 2500

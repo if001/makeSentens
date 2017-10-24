@@ -13,6 +13,7 @@ import numpy as np
 pyximport.install(setup_args={'include_dirs': np.get_include()})
 from tqdm import tqdm #プログレスバー
 
+
 import re
 import sys
 def readfile_for_word2vec(fname):
@@ -33,7 +34,6 @@ def readfile_for_word2vec(fname):
         print("not such file")
         sys.exit(0)
 
-
 def readfile_to_sentens(fname):
     cdef int i = 0
     try:
@@ -53,7 +53,6 @@ def readfile_to_sentens(fname):
     except:
         print("not such file")
         sys.exit(0)
-
 
 
 def makeTrainData(input_wordlist,word_dict,window_size):

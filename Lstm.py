@@ -21,10 +21,12 @@ from Const import Const
 class Lstm(Const):
     def __init__(self):
         super().__init__()
+
         self.word_seq_num = 1
 
     def input_len_set(self,worddict_len):
         self.input_len = self.word_feat_len * self.word_seq_num
+
         self.output_len = 3000
         self.hidden_neurons = 8000
 
