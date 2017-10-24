@@ -4,3 +4,5 @@ aozora_text/*.txt
 aozora_text2/*.txt
 wait/
 dictionaly/
+.DS_Store
+model/
