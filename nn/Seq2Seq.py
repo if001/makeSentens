@@ -19,9 +19,9 @@ from keras.layers          import merge, multiply
 
 
 # mylib
-from Const import Const
+import lib
 
-class Seq2Seq(Const):
+class Seq2Seq(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.input_word_num = 1
@@ -127,9 +127,8 @@ class Seq2Seq(Const):
             if flag == "load":
                 print("load")
                 self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir)
-
         except :
-            print("no such file")
+            print(self.seq2seq_wait_save_dir+" dose not exist")
             sys.exit(0)
 
 

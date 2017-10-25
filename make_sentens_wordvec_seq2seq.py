@@ -33,35 +33,35 @@ import random
 
 
 # mylib
-from mecab_test import get_words
-from wordvec import MyWord2Vec
-# from MyWord2Vec import myWord2Vec 
-# from MyVec2Word import myVec2Word
-from Seq2Seq import Seq2Seq
-from Const import Const
-from progress_time import ProgressTime
+# from mecab_test import get_words
+# from Const import Const
+# from progress_time import ProgressTime
+
+import lib
+import nn
 
 # cython
-import pyximport; pyximport.install()
-import cythonFunc
+#import pyximport; pyximport.install()
+#import cythonFunc
+import cython_package.cython_package as cy
 
 
-class Trainer(Const):
+class Trainer(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.window_size = 1
 
 
     def init_seq2seq(self):
-        self.seq2seq = Seq2Seq()
+        self.seq2seq = nn.Seq2Seq.Seq2Seq()
         self.seq2seq.make_net()
 
 
     def init_word2vec(self,flag):
-        self.word2vec = MyWord2Vec()
+        self.word2vec = lib.wordvec.MyWord2Vec()
         if flag == "learn":
             self.word2vec.train(self.dict_train_file)
-        elif flag == "load": 
+        elif flag == "load":
             self.word2vec.load_model()
         else:
             print("not word2vec model")
@@ -69,7 +69,7 @@ class Trainer(Const):
 
     def get_word_lists(self):
         print("make wordlists!")
-        return cythonFunc.readfile_to_sentens(self.dict_train_file)
+        return cy.readfile_to_sentens(self.dict_train_file)
 
 
     def select_random_sentens(self,word_lists):
@@ -97,9 +97,6 @@ class Trainer(Const):
         print(">> " + self.sentens_array_to_str(sentens))
         __sentens_vec = self.sentens_to_vec(sentens[::-1])
         __sentens_vec = self.zero_padding(__sentens_vec)
-
-        # sentens = sentens[::-1] #逆順!
-        # __sentens_vec = self.sentens_to_vec(sentens)
 
         __sentens_vec = np.array(__sentens_vec)
         __sentens_vec = __sentens_vec.reshape(1,self.seq_num,self.word_feat_len)
@@ -171,18 +168,17 @@ class Trainer(Const):
 
 def main():
     rflag = ""
-    flag = "learn"
+    # flag = "learn"
     # rflag = "resume"
-    # flag = "make"
+    flag = "make"
 
     rnp_model = Trainer()
 
     word_lists = rnp_model.get_word_lists()
-    rnp_model.init_word2vec("learn")
+    # rnp_model.init_word2vec("learn")
     # rnp_model.init_word2vec("load")
 
     rnp_model.init_seq2seq()
-
 
     if rflag == "resume" :
         rnp_model.seq2seq.waitController("load")
@@ -222,7 +218,7 @@ def main():
 
 
     if flag == "make":
-        rnp_model.word2vec.load_model()
+        rnp_model.init_word2vec("load")
         rnp_model.seq2seq.waitController("load")
 
         # # 入力文から文章生成
@@ -230,7 +226,7 @@ def main():
         #     input_line = input(">> ")
         #     rnp_model.make_sentens_input(input_line)
 
-        for i in range(1):
+        for i in range(5):
             input_sentens = rnp_model.select_random_sentens(word_lists)
 
             predict_sentens_vec = rnp_model.make_sentens(input_sentens)
@@ -241,9 +237,9 @@ def main():
             input_sentens_vec = rnp_model.sentens_to_vec(input_sentens[::-1])
             input_sentens_vec = rnp_model.zero_padding(input_sentens_vec)
 
-            rnp_model.glaph_plot(input_sentens_vec)
-            rnp_model.glaph_plot(predict_sentens_vec)
-        plt.show()
+        #     rnp_model.glaph_plot(input_sentens_vec)
+        #     rnp_model.glaph_plot(predict_sentens_vec)
+        # plt.show()
 
 if __name__ == "__main__" :
     main()

@@ -2,7 +2,7 @@ Script.cpython-35m-darwin.so
 __pycache__
 aozora_text/*.txt
 aozora_text2/*.txt
-wait/
+nn/model/*
+nn/wait/*
 dictionaly/
 .DS_Store
-model/

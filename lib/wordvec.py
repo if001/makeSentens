@@ -9,10 +9,9 @@ import pylab as plt
 import numpy as np
 
 # mylib
-from Const import Const
+import lib
 
-
-class MyWord2Vec(Const):
+class MyWord2Vec(lib.Const.Const):
     def __init__(self):
         super().__init__()
 
