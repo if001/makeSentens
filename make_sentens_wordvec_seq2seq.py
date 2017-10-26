@@ -168,7 +168,7 @@ class Trainer(lib.Const.Const):
 
 def main():
     rflag = ""
-    # flag = "learn"
+    #flag = "learn"
     # rflag = "resume"
     flag = "make"
 
@@ -176,7 +176,7 @@ def main():
 
     word_lists = rnp_model.get_word_lists()
     # rnp_model.init_word2vec("learn")
-    # rnp_model.init_word2vec("load")
+    rnp_model.init_word2vec("load")
 
     rnp_model.init_seq2seq()
 
@@ -197,6 +197,10 @@ def main():
                     teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                     teach_sentens = rnp_model.reshape_sentens(teach_sentens)
                     if(len(teach_sentens)<=rnp_model.seq_num): break
+
+                print("tr",train_sentens)
+                print("te",teach_sentens)
+                print("")
                 # train_sentens = rnp_model.EOF_padding(train_sentens)
                 train_sentens = train_sentens[::-1] # 逆順にする
                 # teach_sentens = rnp_model.EOF_padding(teach_sentens)
