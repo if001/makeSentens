@@ -42,6 +42,8 @@ class File():
         if (("｜" in line ) == True): flag += 1
         if (("ルビ" in line ) == True): flag += 1
 
+
+
         # 改行のみも除く
         if ((" \n" == line ) == True): flag += 1
         if (("\n" == line ) == True): flag += 1

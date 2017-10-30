@@ -46,6 +46,8 @@ class File():
         if ((" \n" == line ) == True): flag += 1
         if (("\n" == line ) == True): flag += 1
 
+
+        if (("＊" == line ) == True): flag += 1
         return flag
 
 
