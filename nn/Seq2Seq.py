@@ -36,9 +36,9 @@ class Seq2Seq(lib.Const.Const):
     def make_net(self):
         # ---------------
         input_dim = self.word_feat_len
-        latent_dim = 1000
-        hidden_dim1 = 800
-        hidden_dim2 = 500
+        latent_dim = 500
+        hidden_dim1 = 300
+        hidden_dim2 = 200
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))

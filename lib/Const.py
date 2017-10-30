@@ -9,7 +9,7 @@ import lib
 class Const():
     def __init__(self):
         """ valiable setting"""
-        self.word_feat_len = 500
+        self.word_feat_len = 200
         self.batch_size = 20000
         # self.batch_size = 25
         self.learning_num = 10
