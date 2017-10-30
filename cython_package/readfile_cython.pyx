@@ -38,26 +38,11 @@ def readfile_for_word2vec(fname):
 
 def readfile_to_sentens(fname):
     cdef int i = 0
-    # wordlists = []
-    # print("aaaaaaaaaaaa")
-    # print(fname)
-    # with open(fname,'r') as file:
-    #     for line in file :
-    #         sys.stdout.write("\r done readfile to make word list : %d" % i)
-    #         sys.stdout.flush()
-    #         i += 1
-    #         line = re.sub(r'\n', "", line)
-    #         if len(line) != 0:
-    #             sentens = line.split("。")[0]
-    #             sentens += "。"
-    #             wordlists.append(sentens.split(" "))
-    # return wordlists
-
     try:
         wordlists = []
         with open(fname,'r') as file:
             for line in file :
-                sys.stdout.write("\r done readfile to make word list : %d" % i)
+                sys.stdout.write("\r done readfile to make word list : "+str(i))
                 sys.stdout.flush()
                 i += 1
                 line = re.sub(r'\n', "", line)
