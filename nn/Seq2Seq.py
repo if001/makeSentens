@@ -34,21 +34,26 @@ class Seq2Seq(lib.Const.Const):
         self.decord_len = decord_len
 
     def make_net(self):
-        # ---------------        
-        latent_dim = 500
+        # ---------------
         input_dim = self.word_feat_len
+        latent_dim = 1000
+        hidden_dim = 800
+        output_dim = self.word_feat_len
+
+
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
-                       
+        encoded = Dense(latent_dim, activation="linear")(encoded)
+
         decoded = RepeatVector(self.decord_len)(encoded)
-        decoded = LSTM(input_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        decoded = Dense(input_dim, activation="linear")(decoded)
+        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
+        decoded = Dense(hidden_dim, activation="linear")(decoded)
+        decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
         self.sequence_autoencoder.compile(optimizer='rmsprop', loss='mse')
         # ---------------
 
-        
 
         # ---- modelで組む ------
         # model=Sequential()
@@ -131,17 +136,12 @@ class Seq2Seq(lib.Const.Const):
         return predict_list
 
     def waitController(self,flag,fname):
-        try:
-            if flag == "save":
-                print("save"+self.seq2seq_wait_save_dir+fname)
-                self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
-            if flag == "load":
-                print("load"+self.seq2seq_wait_save_dir+fname)
-                self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
-        except :
-            print(self.seq2seq_wait_save_dir+fname+" dose not exist")
-            sys.exit(0)
-
+        if flag == "save":
+            print("save"+self.seq2seq_wait_save_dir+fname)
+            self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
+        if flag == "load":
+            print("load"+self.seq2seq_wait_save_dir+fname)
+            self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
 
 
 def main():
@@ -173,7 +173,6 @@ def main():
         inp_batch.append(inp)
         inp_batch = np.array(inp_batch)
 
-        
         predict = seq2seq.predict(inp_batch)
         print("inp :",inp_batch)
         print("test:",predict)

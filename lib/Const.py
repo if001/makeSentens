@@ -10,7 +10,7 @@ class Const():
     def __init__(self):
         """ valiable setting"""
         self.word_feat_len = 500
-        self.batch_size = 10000
+        self.batch_size = 20000
         # self.batch_size = 25
         self.learning_num = 10
         # self.seq_num = 40
