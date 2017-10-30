@@ -27,7 +27,7 @@ import sys
 
 
 #import matplotlib.pyplot as plt
-import pylab as plt
+#import pylab as plt
 from itertools import chain #配列ふらっと化
 import random
 

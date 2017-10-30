@@ -4,7 +4,7 @@ import gensim
 from gensim.models import word2vec
 #from gensim import models as mod
 
-import pylab as plt
+#import pylab as plt
 
 import numpy as np
 

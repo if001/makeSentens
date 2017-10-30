@@ -1,7 +1,7 @@
 
 import sys
 import numpy as np
-import matplotlib.pylab as plt
+#import matplotlib.pylab as plt
 from keras.models import Model
 
 from keras.layers import Input, LSTM, RepeatVector
