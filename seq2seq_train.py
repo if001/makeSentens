@@ -152,13 +152,12 @@ class Trainer(lib.Const.Const):
         return sentens
 
 
-    def zero_padding(self,sentens_vec):
-        if self.seq_num > len(sentens_vec):
-            __diff_len = self.seq_num - len(sentens_vec)
+    def zero_padding(self,sentens_vec,seq_num):
+        if seq_num > len(sentens_vec):
+            __diff_len = seq_num - len(sentens_vec)
             for i in range(__diff_len):
                 sentens_vec.append([0 for i in range(self.word_feat_len)])
         return sentens_vec
-
 
     def reshape_sentens(self,sentens):
         if ('「' in sentens): sentens.remove('「')
@@ -166,85 +165,113 @@ class Trainer(lib.Const.Const):
         while '' in sentens: sentens.remove('')
         return sentens
 
-def main():
-    rflag = ""
-    #flag = "learn"
-    # rflag = "resume"
-    flag = "make"
+    def select_random_sentens(self,word_lists,seq_len):
+        while(True):
+            index = random.randint(0,len(word_lists)-2)
+            __sentens = word_lists[index]
+            __sentens = self.reshape_sentens(__sentens)
+            if (len(__sentens) <= seq_len): break
+        return __sentens
 
-    rnp_model = Trainer()
 
-    word_lists = rnp_model.get_word_lists()
-    # rnp_model.init_word2vec("learn")
-    rnp_model.init_word2vec("load")
+    def get_word_lists(self,fname):
+        print("make wordlists!")
+        return cy.readfile_to_sentens(fname)
 
-    rnp_model.init_seq2seq()
 
-    if rflag == "resume" :
-        rnp_model.seq2seq.waitController("load")
+    def make_data(self,word_lists,encord_len,decord_len):
+        train_sentens_vec_batch = []
+        teach_sentens_vec_batch = []
+        for j in range(self.batch_size):
+            while(True):
+                train_sentens = self.select_random_sentens(word_lists,encord_len)
+                teach_sentens = word_lists[word_lists.index(train_sentens)+1]
+                teach_sentens = self.reshape_sentens(teach_sentens)
+                if(len(teach_sentens) <= decord_len): break
 
-    if flag == "learn":
-        # lstm
+            train_sentens = train_sentens[::-1] # 逆順にする
+
+            train_sentens_vec = self.sentens_to_vec(train_sentens)
+            teach_sentens_vec = self.sentens_to_vec(teach_sentens)
+
+            train_sentens_vec = self.zero_padding(train_sentens_vec,encord_len)
+            teach_sentens_vec = self.zero_padding(teach_sentens_vec,decord_len)
+
+            train_sentens_vec_batch.append(train_sentens_vec)
+            teach_sentens_vec_batch.append(teach_sentens_vec)
+
+        train_sentens_vec_batch = np.array(train_sentens_vec_batch)
+        teach_sentens_vec_batch = np.array(teach_sentens_vec_batch)
+
+        # print(len(train_sentens_vec_batch))
+        # print(len(train_sentens_vec_batch[0]))
+        # print(len(train_sentens_vec_batch[0][0]))
+        return train_sentens_vec_batch,teach_sentens_vec_batch
+
+
+
+
+def train(train_model,train,teach):
         print("learninig lstm start")
-        for i in range(rnp_model.learning_num):
+        for i in range(lib.Const.Const().learning_num):
             print("train step : ",i)
-            train_sentens_vec_batch = []
-            teach_sentens_vec_batch = []
-            for j in range(10):
-            # for j in range(rnp_model.batch_size):
-                while(True):
-                    train_sentens = rnp_model.select_random_sentens(word_lists)
-                    teach_sentens = word_lists[word_lists.index(train_sentens)+1]
-                    teach_sentens = rnp_model.reshape_sentens(teach_sentens)
-                    if(len(teach_sentens)<=rnp_model.seq_num): break
+            train_model.train(train,teach)
 
-                print("tr",train_sentens)
-                print("te",teach_sentens)
-                print("")
-                # train_sentens = rnp_model.EOF_padding(train_sentens)
-                train_sentens = train_sentens[::-1] # 逆順にする
-                # teach_sentens = rnp_model.EOF_padding(teach_sentens)
+def save_waid(train_model,fname):
+    train_model.waitController("save",fname)
 
-                train_sentens_vec = rnp_model.sentens_to_vec(train_sentens)
-                teach_sentens_vec = rnp_model.sentens_to_vec(teach_sentens)
-
-                train_sentens_vec = rnp_model.zero_padding(train_sentens_vec)
-                teach_sentens_vec = rnp_model.zero_padding(teach_sentens_vec)
-
-                train_sentens_vec_batch.append(train_sentens_vec)
-                teach_sentens_vec_batch.append(teach_sentens_vec)
-
-            train_sentens_vec_batch = np.array(train_sentens_vec_batch)
-            teach_sentens_vec_batch = np.array(teach_sentens_vec_batch)
-
-            rnp_model.seq2seq.train(train_sentens_vec_batch,teach_sentens_vec_batch)
-            rnp_model.seq2seq.waitController("save")
+def load_waid(train_model,fname):
+    train_model.waitController("load",fname)
 
 
-    if flag == "make":
-        rnp_model.init_word2vec("load")
-        rnp_model.seq2seq.waitController("load")
+def train_main(tr,flag=""):
+    tr.init_word2vec("learn")
+    word_lists = tr.get_word_lists(lib.Const.Const().dict_train_file)
 
-        # # 入力文から文章生成
-        # while(True):
-        #     input_line = input(">> ")
-        #     rnp_model.make_sentens_input(input_line)
+    for value in tr.buckets:
+        print("start bucket ",value)
+        tr.fact_seq2seq(value[0],value[1])
+        print(flag)
+        if flag == "resume" :
+            print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            load_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
-        for i in range(5):
-            input_sentens = rnp_model.select_random_sentens(word_lists)
+        train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
+        train(tr.models[-1],train_data,teach_data)
+        save_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
-            predict_sentens_vec = rnp_model.make_sentens(input_sentens)
-            output_sentens = rnp_model.sentens_vec_to_word(predict_sentens_vec)
-            print(output_sentens)
-            print("")
 
-            input_sentens_vec = rnp_model.sentens_to_vec(input_sentens[::-1])
-            input_sentens_vec = rnp_model.zero_padding(input_sentens_vec)
+def make_sentens_main(tr):
+    tr.init_word2vec("load")
+    word_lists = tr.get_word_lists(lib.Const.Const().dict_load_file)
 
-        #     rnp_model.glaph_plot(input_sentens_vec)
-        #     rnp_model.glaph_plot(predict_sentens_vec)
-        # plt.show()
+    for value in tr.buckets:
+        tr.fact_seq2seq(value[0],value[1])
+        load_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+
+    import random
+    for i in range(10):
+        sentens_arr = tr.select_random_sentens(word_lists,random.choice(tr.buckets)[0])
+        sentens_vec = tr.predict_sentens_vec(sentens_arr)
+        sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)
+        sentens = tr.sentens_array_to_str(sentens_arr)
+        print(sentens)
+        print("")
+
+    # sentens_arr = tr.select_random_sentens(word_lists,5)
+    # for i in range(5):
+    #     sentens_vec = tr.predict_sentens_vec(sentens_arr)
+    #     sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)        
+    #     sentens = tr.sentens_array_to_str(sentens_arr)
+    #     print(sentens)
+    #     print("")
+
+
+def main():
+    tr = Trainer()
+    # train_main(tr)
+    # train_main(tr,"resume")
+    make_sentens_main(tr)
 
 if __name__ == "__main__" :
     main()
-
