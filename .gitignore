@@ -2,6 +2,8 @@ Script.cpython-35m-darwin.so
 __pycache__
 aozora_text/*.txt
 aozora_text2/*.txt
+aozora_text3/*.txt
+aozora_text3/files/*
 nn/model/*
 nn/wait/*
 dictionaly/
