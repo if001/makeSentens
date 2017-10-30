@@ -6,6 +6,8 @@
 
 import re
 import os
+import sys
+
 
 class File():
     def __init__(self):
@@ -16,9 +18,14 @@ class File():
     def get_files_indir(self):
         dir_name = "./"
         files = os.listdir(dir_name)
-        for file in files:
-            if (".txt" in file) and ("re_" in file):
-                self.filelist.append(file)
+        try:
+            for file in files:
+                if (".txt" in file) and ("re_" in file):
+                    self.filelist.append(file)
+
+        except :
+            print("reshape_text error occard" + file)
+            sys.exit(0)
 
 
     def checkline(self,line):
