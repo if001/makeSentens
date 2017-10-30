@@ -50,12 +50,22 @@ class Trainer(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.window_size = 1
-
+        self.models = []
 
     def init_seq2seq(self):
         self.seq2seq = nn.Seq2Seq.Seq2Seq()
         self.seq2seq.make_net()
 
+
+    def fact_seq2seq(self,encord_len,decord_len):
+        """
+        #buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+        """
+        # for value in self.buckets:
+        #     self.models.append(nn.Seq2Seq.Seq2Seq(value[0],value[1]))
+        # models[-1].make_net()
+        self.models.append(nn.Seq2Seq.Seq2Seq(encord_len,decord_len))
+        self.models[-1].make_net()
 
     def init_word2vec(self,flag):
         self.word2vec = lib.wordvec.MyWord2Vec()
@@ -67,18 +77,10 @@ class Trainer(lib.Const.Const):
             print("not word2vec model")
             exit(0)
 
+
     def get_word_lists(self):
         print("make wordlists!")
         return cy.readfile_to_sentens(self.dict_train_file)
-
-
-    def select_random_sentens(self,word_lists):
-        while(True):
-            index = random.randint(0,len(word_lists)-2)
-            __sentens = word_lists[index]
-            __sentens = self.reshape_sentens(__sentens)
-            if (len(__sentens) <= self.seq_num): break
-        return __sentens
 
     def sentens_array_to_str(self,sentens_array):
         __sentens = ""
@@ -93,18 +95,27 @@ class Trainer(lib.Const.Const):
             __sentens_vec.append(vec)
         return __sentens_vec
 
-    def make_sentens(self,sentens):
-        print(">> " + self.sentens_array_to_str(sentens))
-        __sentens_vec = self.sentens_to_vec(sentens[::-1])
-        __sentens_vec = self.zero_padding(__sentens_vec)
+    def select_bucket(self,sentens_arr):
+        index = 0
+        for i in range(len(self.buckets)-1):
+            if (len(sentens_arr) > self.buckets[i][0]):
+                index = self.buckets.index(self.buckets[i+1])
+        return index
 
+    def predict_sentens_vec(self,sentens_arr):
+        print(">> " + self.sentens_array_to_str(sentens_arr))
+        bucket_index = self.select_bucket(sentens_arr)
+        print(len(sentens_arr),self.buckets[bucket_index])
+        __seq_num = self.buckets[bucket_index][0]
+
+        __sentens_vec = self.sentens_to_vec(sentens_arr[::-1])
+        __sentens_vec = self.zero_padding(__sentens_vec,__seq_num)
         __sentens_vec = np.array(__sentens_vec)
-        __sentens_vec = __sentens_vec.reshape(1,self.seq_num,self.word_feat_len)
-
-        # 次の特徴量を予測
-        __predict_sentens_vec = self.seq2seq.predict(__sentens_vec)
-        __predict_sentens_vec = __predict_sentens_vec.reshape(self.seq_num,self.word_feat_len)
+        __sentens_vec = __sentens_vec.reshape(1,__seq_num,self.word_feat_len)
+        __predict_sentens_vec = self.models[bucket_index].predict(__sentens_vec)
+        __predict_sentens_vec = __predict_sentens_vec.reshape(self.buckets[bucket_index][1],self.word_feat_len)
         return __predict_sentens_vec
+
 
     def sentens_vec_to_word(self,predict_sentens_vec):
         __output_sentens = ""
@@ -114,6 +125,14 @@ class Trainer(lib.Const.Const):
             if (word == "。"): break
         return __output_sentens
 
+
+    def sentens_vec_to_sentens_arr(self,sentens_vec):
+        __arr = []
+        for value in sentens_vec:
+            __arr.append(self.word2vec.get_word(value)) 
+        return __arr
+
+    
     def make_sentens_input(self,sentens):
         print(">> ",sentens)
         __sentens_vec = self.sentens_to_vec(sentens)
@@ -217,10 +236,10 @@ def train(train_model,train,teach):
             print("train step : ",i)
             train_model.train(train,teach)
 
-def save_waid(train_model,fname):
+def save_wait(train_model,fname):
     train_model.waitController("save",fname)
 
-def load_waid(train_model,fname):
+def load_wait(train_model,fname):
     train_model.waitController("load",fname)
 
 
@@ -238,7 +257,7 @@ def train_main(tr,flag=""):
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
         train(tr.models[-1],train_data,teach_data)
-        save_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
 
 def make_sentens_main(tr):
@@ -247,11 +266,12 @@ def make_sentens_main(tr):
 
     for value in tr.buckets:
         tr.fact_seq2seq(value[0],value[1])
-        load_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
     import random
     for i in range(10):
         sentens_arr = tr.select_random_sentens(word_lists,random.choice(tr.buckets)[0])
+    
         sentens_vec = tr.predict_sentens_vec(sentens_arr)
         sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)
         sentens = tr.sentens_array_to_str(sentens_arr)
