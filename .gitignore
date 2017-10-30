@@ -6,5 +6,3 @@ nn/model/*
 nn/wait/*
 dictionaly/
 .DS_Store
-cython_package/build/
-cython_package/cython_package.cpython-35m-darwin.so
