@@ -243,17 +243,21 @@ def load_wait(train_model,fname):
     train_model.waitController("load",fname)
 
 
-def train_main(tr,flag=""):
-    tr.init_word2vec("learn")
+def train_main(tr):
+    if '--resume' in sys.argv:
+        tr.init_word2vec("load")
+    else:
+        tr.init_word2vec("learn")
+
     word_lists = tr.get_word_lists(lib.Const.Const().dict_train_file)
 
     for value in tr.buckets:
         print("start bucket ",value)
         tr.fact_seq2seq(value[0],value[1])
-        print(flag)
-        if flag == "resume" :
+
+        if '--resume' in sys.argv:
             print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-            load_waid(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
         train(tr.models[-1],train_data,teach_data)
@@ -271,7 +275,7 @@ def make_sentens_main(tr):
     import random
     for i in range(10):
         sentens_arr = tr.select_random_sentens(word_lists,random.choice(tr.buckets)[0])
-    
+
         sentens_vec = tr.predict_sentens_vec(sentens_arr)
         sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)
         sentens = tr.sentens_array_to_str(sentens_arr)
@@ -289,9 +293,14 @@ def make_sentens_main(tr):
 
 def main():
     tr = Trainer()
-    # train_main(tr)
-    # train_main(tr,"resume")
-    make_sentens_main(tr)
+    if '--train' in sys.argv:
+        train_main(tr)
+
+    elif '--make' in sys.argv:
+        make_sentens_main(tr)
+
+    else:
+        print("flag is invalid!")
 
 if __name__ == "__main__" :
     main()
