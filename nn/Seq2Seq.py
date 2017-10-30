@@ -37,17 +37,18 @@ class Seq2Seq(lib.Const.Const):
         # ---------------
         input_dim = self.word_feat_len
         latent_dim = 1000
-        hidden_dim = 800
+        hidden_dim1 = 800
+        hidden_dim2 = 500
         output_dim = self.word_feat_len
-
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
-        encoded = Dense(latent_dim, activation="linear")(encoded)
+        encoded = Dense(hidden_dim1, activation="relu")(encoded)
+        encoded = Dense(hidden_dim2, activation="linear")(encoded)
 
         decoded = RepeatVector(self.decord_len)(encoded)
         decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        decoded = Dense(hidden_dim, activation="linear")(decoded)
+        decoded = Dense(hidden_dim1, activation="relu")(decoded)
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
