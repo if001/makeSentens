@@ -16,6 +16,7 @@ from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector,
 from keras.models          import Model
 from keras.layers.core     import Flatten
 from keras.layers          import merge, multiply
+from keras.optimizers import SGD
 
 from keras.callbacks import EarlyStopping
 
@@ -52,64 +53,20 @@ class Seq2Seq(lib.Const.Const):
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
-        self.sequence_autoencoder.compile(optimizer='rmsprop',
-                                          loss='mse',
-                                          metrics=['accuracy'])
-        # ---------------
 
-
-        # ---- modelで組む ------
-        # model=Sequential()
-        # model.add(LSTM(units = self.hidden_dim, input_shape=(self.seq_num, self.word_dim)))
-
-        # seq_out_length = 1 #????
-        # #decoder
-        # model.add(RepeatVector(seq_out_length))
-        # model.add(LSTM(units=self.hidden_dim, return_sequences=True))
-
-        # model.add(TD(Dense(units=self.word_dim)))
-        # model.add(Activation('softmax'))
-        # ---- modelで組む ------
-
-
-        # ---------------
-        # timesteps   = self.input_length
-        # latent_dim  = 2000
-        # inputs      = Input(shape=(timesteps, self.word_dim))
-        # encoded     = LSTM(latent_dim)(inputs)
-
-        # a_vector    = Dense(latent_dim, activation='tanh')(Flatten()(inputs))
-        # #a_vector    = Dense(latent_dim, activation='softmax')(Flatten()(inputs))
-        # mul         = multiply([encoded, a_vector])
-        # # encoder     = Model(inputs, mul)
-        # x           = RepeatVector(timesteps)(mul)
-        # x           = Bi(LSTM(latent_dim, return_sequences=True))(x)
-        # #decoded     = TD(Dense(self.word_dim, activation='softmax'))(x)
-        # decoded     = TD(Dense(self.word_dim, activation='tanh'))(x)
-        # ---------------
-
-
-
-        # a_vector    = Dense(latent_dim, activation='tanh')(Flatten()(inputs))
-        # #a_vector    = Dense(latent_dim, activation='softmax')(Flatten()(inputs))
-        # mul         = multiply([encoded, a_vector])
-        # # encoder     = Model(inputs, mul)
-        # x           = RepeatVector(timesteps)(mul)
-        # x           = Bi(LSTM(latent_dim, return_sequences=True))(x)
-        # #decoded     = TD(Dense(self.word_dim, activation='softmax'))(x)
-        # decoded     = TD(Dense(self.word_dim, activation='tanh'))(x)
-        # ---------------
-
-
-
-        # self.sequence_autoencoder = Model(inputs, decoded)
-
-        # loss = 'mean_squared_error'
-        # optimizer = 'rmsprop'
+        
+        optimizer = 'rmsprop'
+        optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
-        # # self.model.compile(loss=loss, optimizer=optimizer)
-        # # self.model.summary()
-        # self.sequence_autoencoder.compile(loss=loss, optimizer=optimizer)
+        loss = 'mean_squared_error'
+        loss = 'mean_squared_error'
+        loss = 'mean_squared_error'
+        loss = 'kullback_leibler_divergence'
+
+        self.sequence_autoencoder.compile(optimizer=optimizer,
+                                          loss=loss,
+                                          metrics=['accuracy'])
+
         self.sequence_autoencoder.summary()
 
 
