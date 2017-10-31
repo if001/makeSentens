@@ -36,9 +36,9 @@ class Seq2Seq(lib.Const.Const):
     def make_net(self):
         # ---------------
         input_dim = self.word_feat_len
-        latent_dim = 500
-        hidden_dim1 = 300
-        hidden_dim2 = 200
+        latent_dim = 30
+        hidden_dim1 = 20
+        hidden_dim2 = 10
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
@@ -52,7 +52,9 @@ class Seq2Seq(lib.Const.Const):
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
-        self.sequence_autoencoder.compile(optimizer='rmsprop', loss='mse')
+        self.sequence_autoencoder.compile(optimizer='rmsprop',
+                                          loss='mse',
+                                          metrics=['accuracy'])
         # ---------------
 
 
@@ -114,7 +116,7 @@ class Seq2Seq(lib.Const.Const):
 
     def train(self,X_train,Y_train):
 
-        es_cb = EarlyStopping(monitor='val_loss', patience=0, verbose=0, mode='auto')
+        es_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
                                       #nb_epoch=9,
