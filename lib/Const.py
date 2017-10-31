@@ -9,7 +9,7 @@ import lib
 class Const():
     def __init__(self):
         """ valiable setting"""
-        self.word_feat_len = 100
+        self.word_feat_len = 30
         self.batch_size = 20000
         # self.batch_size = 25
         self.learning_num = 10
@@ -26,15 +26,15 @@ class Const():
         self.dict_dir = self.project_dir+'/dictionaly/dict.txt'
 
         self.dict_train_file = self.project_dir+'/aozora_text/files_all.txt'
-        self.dict_train_file = self.project_dir+'/aozora_text/files_all_conv.txt'
+        self.dict_train_file = self.project_dir+'/aozora_text3/files/files_all_umn.txt'
         # self.dict_train_file = self.project_dir+'/aozora_text2/files_all.txt'
 
         self.dict_load_file = self.project_dir+'/aozora_text/files_all.txt'
 
         #self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp.model'
         # self.word2vec_wait = self.project_dir+'/nn/model/text8_ymn.model'
-        self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp_ymn.model'
-
+        #self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp_ymn.model'
+        self.word2vec_wait = self.project_dir+'/nn/model/text8_umn.model'
 
     # def glaph_plot(self,data):
     #     t = range(len(data))

@@ -37,35 +37,31 @@ class Seq2Seq(lib.Const.Const):
     def make_net(self):
         # ---------------
         input_dim = self.word_feat_len
-        latent_dim = 50
-        hidden_dim1 = 30
+        latent_dim = 30
+        hidden_dim1 = 20
         hidden_dim2 = 20
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
         encoded = Dense(hidden_dim1, activation="relu")(encoded)
-        encoded = Dense(hidden_dim1, activation="relu")(encoded)
-        encoded = Dense(hidden_dim1, activation="relu")(encoded)
         encoded = Dense(hidden_dim2, activation="linear")(encoded)
 
         decoded = RepeatVector(self.decord_len)(encoded)
         decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        decoded = Dense(hidden_dim1, activation="relu")(decoded)
-        decoded = Dense(hidden_dim1, activation="relu")(decoded)
-        decoded = Dense(hidden_dim1, activation="relu")(decoded)
+        decoded = Dense(hidden_dim2, activation="relu")(decoded)
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
 
 
         optimizer = 'rmsprop'
-        optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
+        #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
         loss = 'mean_squared_error'
         loss = 'mean_squared_error'
         loss = 'mean_squared_error'
-        loss = 'kullback_leibler_divergence'
+        #loss = 'kullback_leibler_divergence'
 
         self.sequence_autoencoder.compile(optimizer=optimizer,
                                           loss=loss,
