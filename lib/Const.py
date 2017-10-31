@@ -9,10 +9,9 @@ import lib
 class Const():
     def __init__(self):
         """ valiable setting"""
-        self.word_feat_len = 30
+        self.word_feat_len = 20
         self.batch_size = 20000
-        # self.batch_size = 25
-        self.learning_num = 10
+        self.learning_num = 5
         # self.seq_num = 40
         self.buckets = [(5, 10)]
         #self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]

@@ -78,9 +78,9 @@ class Trainer(lib.Const.Const):
             exit(0)
 
 
-    def get_word_lists(self):
-        print("make wordlists!")
-        return cy.readfile_to_sentens(self.dict_train_file)
+    # def get_word_lists(self):
+    #     print("make wordlists!")
+    #     return cy.readfile_to_sentens(self.dict_train_file)
 
     def sentens_array_to_str(self,sentens_array):
         __sentens = ""
@@ -105,7 +105,7 @@ class Trainer(lib.Const.Const):
     def predict_sentens_vec(self,sentens_arr):
         print(">> " + self.sentens_array_to_str(sentens_arr))
         bucket_index = self.select_bucket(sentens_arr)
-        print(len(sentens_arr),self.buckets[bucket_index])
+
         __seq_num = self.buckets[bucket_index][0]
 
         __sentens_vec = self.sentens_to_vec(sentens_arr[::-1])
@@ -132,7 +132,7 @@ class Trainer(lib.Const.Const):
             __arr.append(self.word2vec.get_word(value)) 
         return __arr
 
-    
+
     def make_sentens_input(self,sentens):
         print(">> ",sentens)
         __sentens_vec = self.sentens_to_vec(sentens)
@@ -252,12 +252,12 @@ def train_main(tr):
             load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
-        
+
         print("learninig lstm start")
         for i in range(lib.Const.Const().learning_num):
             print("train step : ",i)
             tr.models[-1].train(train_data,teach_data)
-            save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')        
+            save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
 
 
@@ -283,7 +283,7 @@ def make_sentens_main(tr):
     # sentens_arr = tr.select_random_sentens(word_lists,5)
     # for i in range(5):
     #     sentens_vec = tr.predict_sentens_vec(sentens_arr)
-    #     sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)        
+    #     sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)
     #     sentens = tr.sentens_array_to_str(sentens_arr)
     #     print(sentens)
     #     print("")

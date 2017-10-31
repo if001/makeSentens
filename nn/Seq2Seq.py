@@ -36,6 +36,13 @@ class Seq2Seq(lib.Const.Const):
 
     def make_net(self):
         # ---------------
+        # テストパラメタ
+        # input_dim = 20
+        # latent_dim = 30
+        # hidden_dim1 = 20
+        # hidden_dim2 = 20
+        # output_dim = 20
+
         input_dim = self.word_feat_len
         latent_dim = 30
         hidden_dim1 = 20
@@ -72,8 +79,7 @@ class Seq2Seq(lib.Const.Const):
 
 
     def train(self,X_train,Y_train):
-
-        es_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
+        es_cb = EarlyStopping(monitor='val_loss', patience=2, verbose=1, mode='auto')
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
                                       #nb_epoch=9,
@@ -114,23 +120,40 @@ def main():
     inp_batch = []
     out_batch = []
     for value in range(seq2seq.batch_size):
-        i = random.randint(0,10)/10
-        inp = [[i,i+0.1],[i+0.2,i+0.3],[i+0.4,i+0.5],[i+0.6,i+0.7],[i+0.8,i+0.9]]
-        inp_batch.append(inp)
-        out = [[i+1.0,i+1.1],[i+1.2,i+1.3],[i+1.4,i+1.5],[i+1.6,i+1.7],[i+1.8,i+1.9]]
-        out_batch.append(out)
+        word_len = 20
+        sentens_len = 5
+        sentens = []
+        out_sentens = []
+        for j in range(sentens_len):
+            one_word = []
+            num = random.randint(0,10)/10
+            for i in range(word_len):
+                one_word.append(num+i/10)
+            sentens.append(one_word)
+            out_sentens.append(one_word[::-1])
+        inp_batch.append(sentens)
+        out_batch.append(out_sentens)
 
     inp_batch = np.array(inp_batch)
     out_batch = np.array(out_batch)
-    for i in range(50):
+    for i in range(10):
         seq2seq.train(inp_batch,out_batch)
+
 
 
     for value in range(10):
         inp_batch = []
-        i = random.randint(0,10)/10
-        inp = [[i,i+0.1],[i+0.2,i+0.3],[i+0.4,i+0.5],[i+0.6,i+0.7],[i+0.8,i+0.9]]
-        inp_batch.append(inp)
+        word_len = 20
+        sentens_len = 5
+        sentens = []
+        for j in range(sentens_len):
+            one_word = []
+            num = random.randint(0,10)/10
+            for i in range(word_len):
+                one_word.append(num+i/10)
+            sentens.append(one_word)
+        inp_batch.append(sentens)
+
         inp_batch = np.array(inp_batch)
 
         predict = seq2seq.predict(inp_batch)
