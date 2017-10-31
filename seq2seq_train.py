@@ -228,14 +228,6 @@ class Trainer(lib.Const.Const):
         return train_sentens_vec_batch,teach_sentens_vec_batch
 
 
-
-
-def train(train_model,train,teach):
-        print("learninig lstm start")
-        for i in range(lib.Const.Const().learning_num):
-            print("train step : ",i)
-            train_model.train(train,teach)
-
 def save_wait(train_model,fname):
     train_model.waitController("save",fname)
 
@@ -260,8 +252,14 @@ def train_main(tr):
             load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
-        train(tr.models[-1],train_data,teach_data)
-        save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        
+        print("learninig lstm start")
+        for i in range(lib.Const.Const().learning_num):
+            print("train step : ",i)
+            tr.models[-1].train(train_data,teach_data)
+            save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')        
+
+
 
 
 def make_sentens_main(tr):
