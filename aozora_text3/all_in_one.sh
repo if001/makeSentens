@@ -1,14 +1,20 @@
 #!/bin/sh
-#
+# ./all_in_one.sh <authorId> <save file name>
 #ダウンロードを飛ばしたい場合は、
 #python3 get_aozora.pyをスキップさせ、
 #<re>のついたファイルを全て削除しておく
-#
+
+# 江戸川乱歩 1779
+# 夢野久作 96
+# 大阪圭吉 236
+# 小栗虫太郎 125 *
+# 海野十三 160 *
+
+
 
 if [ $# -ne 2 ] ; then
     echo "invalid argument"
-    echo "you set author id first"
-    echo "you set save file name second"
+    echo "./all_in_one.sh <authorId> <save file name>"
     exit 1
 fi
 
@@ -22,13 +28,15 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-
 echo "start unzip_somefile.sh"
 ./unzip_somefile.sh
 if [ $? -ne 0 ]; then
     echo "unzip_somefile.sh error"
     exit 1
 fi
+
+echo "rm png"
+rm *.png
 
 echo "start mecab_text.sh"
 ./mecab_text.sh
@@ -51,6 +59,6 @@ if [ $? -ne 0 ]; then
 fi
 
 
-mv re_* ./files
-mv *.zip ./files
-rm *.png
+rm re_* 
+mv *.zip ./zip
+#rm *.png
