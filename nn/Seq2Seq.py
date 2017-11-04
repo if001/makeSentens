@@ -12,7 +12,7 @@ from keras.optimizers import Adam
 
 from keras.layers.wrappers import Bidirectional as Bi
 from keras.layers.wrappers import TimeDistributed as TD
-from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate
+from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate, Dropout
 from keras.models          import Model
 from keras.layers.core     import Flatten
 from keras.layers          import merge, multiply
@@ -44,19 +44,26 @@ class Seq2Seq(lib.Const.Const):
         # output_dim = 20
 
         input_dim = self.word_feat_len
-        latent_dim = 30
+        latent_dim = 20
         hidden_dim1 = 20
-        hidden_dim2 = 20
+        hidden_dim2 = 25
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
-        encoded = Dense(hidden_dim1, activation="relu")(encoded)
-        encoded = Dense(hidden_dim2, activation="linear")(encoded)
+        encoded = Dense(hidden_dim2, activation="relu")(encoded)
+        encoded = Dropout(0.5)(encoded)
+        encoded = Dense(hidden_dim1, activation="linear")(encoded)
 
         decoded = RepeatVector(self.decord_len)(encoded)
-        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
+        #decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
+        decoded = LSTM(output_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
+        decoded = Dense(Hidden_dim1, activation="relu")(decoded)
+        decoded = Dropout(0.5)(decoded)
         decoded = Dense(hidden_dim2, activation="relu")(decoded)
+        decoded = Dropout(0.5)(decoded)
+        decoded = Dense(hidden_dim1, activation="relu")(decoded)
+        decoded = Dropout(0.5)(decoded)
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
@@ -83,7 +90,7 @@ class Seq2Seq(lib.Const.Const):
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
                                       #nb_epoch=9,
-                                      nb_epoch=30,
+                                      nb_epoch=200,
                                       batch_size=self.batch_size,
                                       validation_split=0.1,
                                       verbose=1,
