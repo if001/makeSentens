@@ -9,11 +9,13 @@ import lib
 class Const():
     def __init__(self):
         """ valiable setting"""
-        self.word_feat_len = 20
-        self.batch_size = 3000
-        self.learning_num = 200
+        self.word_feat_len = 128
+        self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
+        self.batch_size = 50
+        self.learning_num = 400
         # self.seq_num = 40
-        self.buckets = [(5, 10)]
+        # self.buckets = [(5, 10),(10,15)]
+        self.buckets = [(10,15)]
         #self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
         """ directory setting"""
@@ -26,8 +28,10 @@ class Const():
 
         # self.dict_train_file = self.project_dir+'/aozora_text3/files/files_all_umn.txt'
         self.dict_train_file = self.project_dir+"/aozora_text3/files/files_all_rnp.txt"
+        self.dict_train_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
 
         self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_rnp.txt"
+        self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
 
         self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp.model'
         #self.word2vec_wait = self.project_dir+'/nn/model/text8_ymn.model'

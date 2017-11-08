@@ -7,8 +7,6 @@ from keras.models import Model
 from keras.layers import Input, LSTM, RepeatVector
 from keras.models import Sequential
 # from keras.layers.wrappers import TD
-from keras.optimizers import Adam
-
 
 from keras.layers.wrappers import Bidirectional as Bi
 from keras.layers.wrappers import TimeDistributed as TD
@@ -16,9 +14,13 @@ from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector,
 from keras.models          import Model
 from keras.layers.core     import Flatten
 from keras.layers          import merge, multiply
-from keras.optimizers import SGD
+from keras.optimizers import Adam,SGD,RMSprop
 
 from keras.callbacks import EarlyStopping
+from keras.layers.normalization import BatchNormalization as BN
+
+from keras import regularizers
+
 
 import sys,os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -44,32 +46,44 @@ class Seq2Seq(lib.Const.Const):
         # output_dim = 20
 
         input_dim = self.word_feat_len
-        latent_dim = 20
-        hidden_dim1 = 20
-        hidden_dim2 = 25
+        latent_dim = 512
+        hidden_dim1 = 256
+        hidden_dim1 = 512
+        hidden_dim1 = 750
+        hidden_dim2 = 64
+        hidden_dim3 = 32
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
-        encoded = Dense(hidden_dim2, activation="relu")(encoded)
-        encoded = Dropout(0.5)(encoded)
-        encoded = Dense(hidden_dim1, activation="linear")(encoded)
+        # encoded = Dense(hidden_dim1, activation="relu")(encoded)
+        # encoded = Dropout(0.4)(encoded)
+        encoded = Dense(hidden_dim1, activation="linear",
+                        kernel_regularizer=regularizers.l2(0.01),
+                        activity_regularizer=regularizers.l1(0.01))(encoded)
+        # encoded = Dense(hidden_dim1, activation="linear")(encoded)
+
 
         decoded = RepeatVector(self.decord_len)(encoded)
-        #decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        decoded = LSTM(output_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        decoded = Dense(Hidden_dim1, activation="relu")(decoded)
-        decoded = Dropout(0.5)(decoded)
-        decoded = Dense(hidden_dim2, activation="relu")(decoded)
-        decoded = Dropout(0.5)(decoded)
-        decoded = Dense(hidden_dim1, activation="relu")(decoded)
-        decoded = Dropout(0.5)(decoded)
+        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
+        #decoded = Dense(hidden_dim1, activation="relu")(decoded)
+        #decoded = Dropout(0.8)(decoded)
+        # decoded = Dense(hidden_dim2, activation="relu")(decoded)
+        # decoded = Dropout(0.5)(decoded)
+        # decoded = Dense(hidden_dim2, activation="relu")(decoded)
+        # decoded = Dropout(0.2)(decoded)
+        #encoded = Dense(hidden_dim1,activation="linear")
+        # encoded = Dense(output_dim, activation="linear",
+        #                 kernel_regularizer=regularizers.l2(0.01),
+        #                 activity_regularizer=regularizers.l1(0.01))(encoded)
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
 
 
         optimizer = 'rmsprop'
+        optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
+
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
         loss = 'mean_squared_error'
@@ -86,7 +100,7 @@ class Seq2Seq(lib.Const.Const):
 
 
     def train(self,X_train,Y_train):
-        es_cb = EarlyStopping(monitor='val_loss', patience=2, verbose=1, mode='auto')
+        es_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
                                       #nb_epoch=9,
