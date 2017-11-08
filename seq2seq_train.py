@@ -86,6 +86,7 @@ class Trainer(lib.Const.Const):
         __sentens = ""
         for value in sentens_array:
             __sentens += value
+            if (value == "。"): break
         return __sentens
 
     def sentens_to_vec(self,sentens):
@@ -94,13 +95,26 @@ class Trainer(lib.Const.Const):
             vec = self.word2vec.get_vector(value)
             __sentens_vec.append(vec)
         return __sentens_vec
+    
 
     def select_bucket(self,sentens_arr):
+        """ """
+        __buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
         index = 0
-        for i in range(len(self.buckets)-1):
-            if (len(sentens_arr) > self.buckets[i][0]):
-                index = self.buckets.index(self.buckets[i+1])
+        for i in range(len(__buckets)-1):
+            if (len(sentens_arr) > __buckets[i][0]):
+                index = __buckets.index(__buckets[i+1])
         return index
+
+    
+    # def select_bucket(self,sentens_arr):
+    #     """ """
+    #     index = 0
+    #     for i in range(len(self.buckets)-1):
+    #         if (len(sentens_arr) > self.buckets[i][0]):
+    #             index = self.buckets.index(self.buckets[i+1])
+    #     return index
+
 
     def predict_sentens_vec(self,sentens_arr):
         print(">> " + self.sentens_array_to_str(sentens_arr))
@@ -184,12 +198,17 @@ class Trainer(lib.Const.Const):
         while '' in sentens: sentens.remove('')
         return sentens
 
-    def select_random_sentens(self,word_lists,seq_len):
-        while(True):
-            index = random.randint(0,len(word_lists)-2)
-            __sentens = word_lists[index]
-            __sentens = self.reshape_sentens(__sentens)
-            if (len(__sentens) <= seq_len): break
+    # def select_random_sentens(self,word_lists,seq_len):
+    #     while(True):
+    #         index = random.randint(0,len(word_lists)-2)
+    #         __sentens = word_lists[index]
+    #         __sentens = self.reshape_sentens(__sentens)
+    #         if (len(__sentens) <= seq_len): break
+    #     return __sentens
+    
+    def select_random_sentens(self,word_lists):
+        index = random.randint(0,len(word_lists)-2)
+        __sentens = word_lists[index]
         return __sentens
 
 
@@ -203,10 +222,12 @@ class Trainer(lib.Const.Const):
         teach_sentens_vec_batch = []
         for j in range(self.batch_size):
             while(True):
-                train_sentens = self.select_random_sentens(word_lists,encord_len)
+                train_sentens = self.select_random_sentens(word_lists)
+                train_sentens = self.reshape_sentens(train_sentens)
                 teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                 teach_sentens = self.reshape_sentens(teach_sentens)
-                if(len(teach_sentens) <= decord_len): break
+                if((self.select_bucket(train_sentens) == 1) and (self.select_bucket(teach_sentens) == 1) ): break 
+                # if(len(teach_sentens) <= decord_len): break
 
             train_sentens = train_sentens[::-1] # 逆順にする
 
@@ -245,11 +266,12 @@ def train_main(tr):
 
     for value in tr.buckets:
         print("start bucket ",value)
-        tr.fact_seq2seq(value[0],value[1])
-
+        
         if '--resume' in sys.argv:
             print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
             load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        else:
+            tr.fact_seq2seq(value[0],value[1])
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
 
