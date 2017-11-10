@@ -97,12 +97,12 @@ class Trainer(lib.Const.Const):
         return __sentens_vec
     
 
-    def select_bucket(self,sentens_arr):
-        """ """
-        __buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+    def select_bucket(self,sentens_arr,flag=0):
+        """ flag=0 is train, flag=1 is teach """
+        __buckets = [(5, 10), (10, 15), (20, 25), (40, 50),(100,100)]
         index = 0
         for i in range(len(__buckets)-1):
-            if (len(sentens_arr) > __buckets[i][0]):
+            if (len(sentens_arr) > __buckets[i][flag]):
                 index = __buckets.index(__buckets[i+1])
         return index
 
@@ -119,8 +119,9 @@ class Trainer(lib.Const.Const):
     def predict_sentens_vec(self,sentens_arr):
         print(">> " + self.sentens_array_to_str(sentens_arr))
         bucket_index = self.select_bucket(sentens_arr)
-
-        __seq_num = self.buckets[bucket_index][0]
+        
+        #__seq_num = self.buckets[bucket_index][0]
+        __seq_num = self.buckets[0][0]
 
         __sentens_vec = self.sentens_to_vec(sentens_arr[::-1])
         __sentens_vec = self.zero_padding(__sentens_vec,__seq_num)
@@ -223,11 +224,12 @@ class Trainer(lib.Const.Const):
         for j in range(self.batch_size):
             while(True):
                 train_sentens = self.select_random_sentens(word_lists)
+                train_sentens = self.select_random_sentens(word_lists)
                 train_sentens = self.reshape_sentens(train_sentens)
                 teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                 teach_sentens = self.reshape_sentens(teach_sentens)
-                if((self.select_bucket(train_sentens) == 1) and (self.select_bucket(teach_sentens) == 1) ): break 
-                # if(len(teach_sentens) <= decord_len): break
+                bucket_index = [(5, 10), (10, 15), (20, 25), (40, 50)].index((20,25))
+                if((self.select_bucket(train_sentens,0) < bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
 
             train_sentens = train_sentens[::-1] # 逆順にする
 
@@ -292,10 +294,11 @@ def make_sentens_main(tr):
         tr.fact_seq2seq(value[0],value[1])
         load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
-    import random
     for i in range(10):
-        sentens_arr = tr.select_random_sentens(word_lists,random.choice(tr.buckets)[0])
-
+        while(True):
+            sentens_arr = tr.select_random_sentens(word_lists)
+            if(tr.select_bucket(sentens_arr) == 1): break
+        print(sentens_arr)
         sentens_vec = tr.predict_sentens_vec(sentens_arr)
         sentens_arr = tr.sentens_vec_to_sentens_arr(sentens_vec)
         sentens = tr.sentens_array_to_str(sentens_arr)

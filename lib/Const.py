@@ -15,7 +15,8 @@ class Const():
         self.learning_num = 400
         # self.seq_num = 40
         # self.buckets = [(5, 10),(10,15)]
-        self.buckets = [(10,15)]
+        self.buckets = [(40,50)]
+        self.buckets = [(20,25)]
         #self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
         """ directory setting"""

@@ -83,11 +83,9 @@ class Seq2Seq(lib.Const.Const):
 
         optimizer = 'rmsprop'
         optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
-
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
+
         # optimizer = 'Adam'
-        loss = 'mean_squared_error'
-        loss = 'mean_squared_error'
         loss = 'mean_squared_error'
         #loss = 'kullback_leibler_divergence'
 
