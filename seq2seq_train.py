@@ -316,6 +316,7 @@ def make_sentens_main(tr):
 
 def main():
     tr = Trainer()
+
     if '--train' in sys.argv:
         train_main(tr)
 

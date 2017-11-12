@@ -10,7 +10,7 @@ from keras.models import Sequential
 
 from keras.layers.wrappers import Bidirectional as Bi
 from keras.layers.wrappers import TimeDistributed as TD
-from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate, Dropout
+from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate, Dropout, Bidirectional
 from keras.models          import Model
 from keras.layers.core     import Flatten
 from keras.layers          import merge, multiply
@@ -36,6 +36,39 @@ class Seq2Seq(lib.Const.Const):
         self.encord_len = encord_len
         self.decord_len = decord_len
 
+    def make_net_simple(self):
+        input_dim = self.word_feat_len
+        latent_dim = 512
+        hidden_dim1 = 512
+        hidden_dim2 = 64
+        output_dim = self.word_feat_len
+
+        inputs = Input(shape=(self.encord_len, input_dim))
+        encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
+        encoded = Dropout(0.4)(encoded)
+        # encoded = Dense(hidden_dim1, activation="linear",
+        #                 kernel_regularizer=regularizers.l2(0.01),
+        #                 activity_regularizer=regularizers.l1(0.01))(encoded)
+        encoded = Dense(hidden_dim1, activation="linear")(encoded)
+
+        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(encoded)
+        decoded = Dropout(0.8)(decoded)
+        decoded = Dense(hidden_dim2, activation="relu")(decoded)
+        decoded = Dropout(0.5)(decoded)
+        decoded = Dense(output_dim, activation="linear")(decoded)
+
+        self.sequence_autoencoder = Model(inputs, decoded)
+
+        optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
+        #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
+
+        # optimizer = 'Adam'
+        loss = 'mean_squared_error'
+
+        self.sequence_autoencoder.compile(optimizer=optimizer, loss=loss, metrics=['accuracy'])
+
+        self.sequence_autoencoder.summary()
+
     def make_net(self):
         # ---------------
         # テストパラメタ
@@ -49,37 +82,32 @@ class Seq2Seq(lib.Const.Const):
         latent_dim = 512
         hidden_dim1 = 256
         hidden_dim1 = 512
-        hidden_dim1 = 750
         hidden_dim2 = 64
-        hidden_dim3 = 32
         output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
-        encoded = LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False)(inputs)
-        # encoded = Dense(hidden_dim1, activation="relu")(encoded)
-        # encoded = Dropout(0.4)(encoded)
-        encoded = Dense(hidden_dim1, activation="linear",
-                        kernel_regularizer=regularizers.l2(0.01),
-                        activity_regularizer=regularizers.l1(0.01))(encoded)
+        encoded = Bidirectional(LSTM(latent_dim, activation="tanh", recurrent_activation="sigmoid", return_sequences=True), merge_mode='sum')(inputs)
+        encoded = Dropout(0.4)(encoded)
+        # encoded = Dense(hidden_dim1, activation="linear",
+        #                 kernel_regularizer=regularizers.l2(0.01),
+        #                 activity_regularizer=regularizers.l1(0.01))(encoded)
         # encoded = Dense(hidden_dim1, activation="linear")(encoded)
+        encoded = Dense(hidden_dim1, activation="lenear")(encoded)
+        encoded = RepeatVector(self.decord_len)(encoded)
+        encoded = Dense(hidden_dim1, activation="softmax")(encoded)
 
-
-        decoded = RepeatVector(self.decord_len)(encoded)
-        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(decoded)
-        #decoded = Dense(hidden_dim1, activation="relu")(decoded)
-        #decoded = Dropout(0.8)(decoded)
-        # decoded = Dense(hidden_dim2, activation="relu")(decoded)
-        # decoded = Dropout(0.5)(decoded)
-        # decoded = Dense(hidden_dim2, activation="relu")(decoded)
-        # decoded = Dropout(0.2)(decoded)
-        #encoded = Dense(hidden_dim1,activation="linear")
+        # decoded = RepeatVector(self.decord_len)(encoded)
+        decoded = LSTM(latent_dim, activation="tanh",recurrent_activation="sigmoid",return_sequences=True)(encoded)
+        decoded = Dropout(0.8)(decoded)
+        decoded = Dense(hidden_dim2, activation="relu")(decoded)
+        decoded = Dropout(0.5)(decoded)
+        # encoded = Dense(hidden_dim1,activation="linear")
         # encoded = Dense(output_dim, activation="linear",
         #                 kernel_regularizer=regularizers.l2(0.01),
         #                 activity_regularizer=regularizers.l1(0.01))(encoded)
         decoded = Dense(output_dim, activation="linear")(decoded)
 
         self.sequence_autoencoder = Model(inputs, decoded)
-
 
         optimizer = 'rmsprop'
         optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
