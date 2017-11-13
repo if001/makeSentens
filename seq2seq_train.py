@@ -266,7 +266,7 @@ def train_main(tr):
         print("start bucket ",value)
         tr.fact_seq2seq(value[0],value[1])
 
-        if '--resume' in sys.argv:    
+        if '--resume' in sys.argv:
             print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
             load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 

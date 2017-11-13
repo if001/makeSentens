@@ -72,18 +72,18 @@ class Seq2Seq(lib.Const.Const):
     def make_net(self):
         # ---------------
         # テストパラメタ
-        # input_dim = 20
-        # latent_dim = 30
-        # hidden_dim1 = 20
-        # hidden_dim2 = 20
-        # output_dim = 20
+        input_dim = 20
+        latent_dim = 30
+        hidden_dim1 = 20
+        hidden_dim2 = 20
+        output_dim = 20
 
-        input_dim = self.word_feat_len
-        latent_dim = 512
-        hidden_dim1 = 256
+        # input_dim = self.word_feat_len
+        # latent_dim = 512
+        # hidden_dim1 = 256
 
-        hidden_dim2 = 512
-        output_dim = self.word_feat_len
+        # hidden_dim2 = 512
+        # output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = Bidirectional(LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False))(inputs)
@@ -122,8 +122,8 @@ class Seq2Seq(lib.Const.Const):
         es_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
-                                      #nb_epoch=9,
-                                      nb_epoch=200,
+                                      # nb_epoch=200,
+                                      nb_epoch=2,
                                       batch_size=self.batch_size,
                                       validation_split=0.1,
                                       verbose=1,
@@ -145,54 +145,74 @@ class Seq2Seq(lib.Const.Const):
 def main():
     seq2seq = Seq2Seq(5,5)
     seq2seq.make_net()
+    # load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
+    # seq2seq.waitController(self,"load","tmp")
 
     import random
 
-    inp_batch = []
-    out_batch = []
-    for value in range(seq2seq.batch_size):
-        word_len = 20
-        sentens_len = 5
-        sentens = []
-        out_sentens = []
-        for j in range(sentens_len):
-            one_word = []
-            num = random.randint(0,10)/10
-            for i in range(word_len):
-                one_word.append(num+i/10)
-            sentens.append(one_word)
-            out_sentens.append(one_word[::-1])
-        inp_batch.append(sentens)
-        out_batch.append(out_sentens)
+    """ test train """
+    # inp_batch = []
+    # out_batch = []
+    # for value in range(seq2seq.batch_size):
+    #     word_len = 20
+    #     sentens_len = 5
+    #     sentens = []
+    #     out_sentens = []
+    #     for j in range(sentens_len):
+    #         one_word = []
+    #         num = random.randint(0,10)/10
+    #         for i in range(word_len):
+    #             one_word.append(num+i/10)
+                
+    #         sentens.append(one_word)
+    #         out_sentens.append(one_word[::-1])
+    #     inp_batch.append(sentens)
+    #     out_batch.append(out_sentens)
 
+    # inp_batch = np.array(inp_batch)
+    # out_batch = np.array(out_batch)
+    # for i in range(10):
+    #     seq2seq.train(inp_batch,out_batch)
+
+    # seq2seq.waitController("save","tmp")
+
+
+    """ test  """
+    # for value in range(10):
+    #     inp_batch = []
+    #     word_len = 20
+    #     sentens_len = 5
+    #     sentens = []
+    #     for j in range(sentens_len):
+    #         one_word = []
+    #         num = random.randint(0,10)/10
+    #         for i in range(word_len):
+    #             one_word.append(num+i/10)
+    #         sentens.append(one_word)
+    #     inp_batch.append(sentens)
+
+    #     inp_batch = np.array(inp_batch)
+
+    #     predict = seq2seq.predict(inp_batch)
+    #     print("inp :",inp_batch)
+    #     print("test:",predict)
+
+    seq2seq.waitController("load","tmp")
+    inp_batch = [[[ 0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0,
+                    2.1,  2.2,  2.3,  2.4,  2.5,  2.6],
+                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
+                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
+                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
+                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
+                  [ 0.6,  0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,
+                    2.,   2.1,  2.2,  2.3,  2.4,  2.5],
+                  [ 0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,
+                    1.8,  1.9,  2. ,  2.1,  2.2 , 2.3]]]
     inp_batch = np.array(inp_batch)
-    out_batch = np.array(out_batch)
-    for i in range(10):
-        seq2seq.train(inp_batch,out_batch)
-
-
-
-    for value in range(10):
-        inp_batch = []
-        word_len = 20
-        sentens_len = 5
-        sentens = []
-        for j in range(sentens_len):
-            one_word = []
-            num = random.randint(0,10)/10
-            for i in range(word_len):
-                one_word.append(num+i/10)
-            sentens.append(one_word)
-        inp_batch.append(sentens)
-
-        inp_batch = np.array(inp_batch)
-
-        predict = seq2seq.predict(inp_batch)
-        print("inp :",inp_batch)
-        print("test:",predict)
-
-
+    predict = seq2seq.predict(inp_batch)
+    print("inp :",inp_batch)
+    print("test:",predict)
 
 if __name__ == "__main__":
    main()

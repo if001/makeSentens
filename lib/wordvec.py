@@ -28,7 +28,6 @@ class MyWord2Vec(lib.Const.Const):
         print("load "+self.word2vec_wait)
         self.model = word2vec.Word2Vec.load(self.word2vec_wait)
 
-
     def get_vector(self,st):
         return self.model.wv[st]
 
@@ -48,16 +47,16 @@ def plot(vec):
 
 def main():
     net = MyWord2Vec()
-    const = Const()
 
-    net.train(const.dict_train_file,"not save")
+    #net.train(const.dict_train_file,"not save")
+    net.train("/aozora_text3/files/files_all_rnp.txt","not save")
 
     #net.load_model()
     # vec = net.get_vector("博士")
     # vec = net.get_vector("明智")
     vec = net.get_vector("怪盗")
-    # print(vec)
-    plot(vec)
+    print(vec)
+    # plot(vec)
 
     # vec = np.array(vec,dtype='f')
     # word = net.get_word(vec)

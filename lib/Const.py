@@ -5,7 +5,6 @@
 #import pylab as plt
 import lib
 
-
 class Const():
     def __init__(self):
         """ valiable setting"""
@@ -34,9 +33,7 @@ class Const():
         self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_rnp.txt"
         # self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
 
-        self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp.model'
-        #self.word2vec_wait = self.project_dir+'/nn/model/text8_ymn.model'
-        #self.word2vec_wait = self.project_dir+'/nn/model/text8_rnp_ymn.model'
+        self.word2vec_wait = self.project_dir+'/lib/model/text8_rnp.model'
         #self.word2vec_wait = self.project_dir+'/nn/model/text8_umn.model'
 
     # def glaph_plot(self,data):
