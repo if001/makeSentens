@@ -81,7 +81,6 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         latent_dim = 512
         hidden_dim1 = 256
-
         hidden_dim2 = 512
         output_dim = self.word_feat_len
 
