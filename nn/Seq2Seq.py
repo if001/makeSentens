@@ -72,18 +72,18 @@ class Seq2Seq(lib.Const.Const):
     def make_net(self):
         # ---------------
         # テストパラメタ
-        input_dim = 20
-        latent_dim = 30
-        hidden_dim1 = 20
-        hidden_dim2 = 20
-        output_dim = 20
+        # input_dim = 20
+        # latent_dim = 30
+        # hidden_dim1 = 20
+        # hidden_dim2 = 20
+        # output_dim = 20
 
-        # input_dim = self.word_feat_len
-        # latent_dim = 512
-        # hidden_dim1 = 256
+        input_dim = self.word_feat_len
+        latent_dim = 512
+        hidden_dim1 = 256
 
-        # hidden_dim2 = 512
-        # output_dim = self.word_feat_len
+        hidden_dim2 = 512
+        output_dim = self.word_feat_len
 
         inputs = Input(shape=(self.encord_len, input_dim))
         encoded = Bidirectional(LSTM(latent_dim,activation="tanh",recurrent_activation="sigmoid",return_sequences=False))(inputs)
@@ -122,8 +122,8 @@ class Seq2Seq(lib.Const.Const):
         es_cb = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='auto')
         self.sequence_autoencoder.fit(X_train, Y_train,
                                       shuffle=True,
-                                      # nb_epoch=200,
-                                      nb_epoch=2,
+                                      nb_epoch=200,
+                                      # nb_epoch=2,
                                       batch_size=self.batch_size,
                                       validation_split=0.1,
                                       verbose=1,

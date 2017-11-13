@@ -224,7 +224,7 @@ class Trainer(lib.Const.Const):
                 train_sentens = self.reshape_sentens(train_sentens)
                 teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                 teach_sentens = self.reshape_sentens(teach_sentens)
-                bucket_index = [(5, 10), (10, 15), (20, 25), (40, 50)].index((20,25))
+                bucket_index = self.buckets.index((20,25))
                 if((self.select_bucket(train_sentens,0) < bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
 
             train_sentens = train_sentens[::-1] # 逆順にする
