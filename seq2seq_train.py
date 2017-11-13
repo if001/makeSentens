@@ -52,11 +52,6 @@ class Trainer(lib.Const.Const):
         self.window_size = 1
         self.models = []
 
-    def init_seq2seq(self):
-        self.seq2seq = nn.Seq2Seq.Seq2Seq()
-        self.seq2seq.make_net()
-
-
     def fact_seq2seq(self,encord_len,decord_len):
         """
         #buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
@@ -66,6 +61,7 @@ class Trainer(lib.Const.Const):
         # models[-1].make_net()
         self.models.append(nn.Seq2Seq.Seq2Seq(encord_len,decord_len))
         self.models[-1].make_net()
+
 
     def init_word2vec(self,flag):
         self.word2vec = lib.wordvec.MyWord2Vec()
@@ -268,12 +264,11 @@ def train_main(tr):
 
     for value in tr.buckets:
         print("start bucket ",value)
-        
-        if '--resume' in sys.argv:
+        tr.fact_seq2seq(value[0],value[1])
+
+        if '--resume' in sys.argv:    
             print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
             load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-        else:
-            tr.fact_seq2seq(value[0],value[1])
 
         train_data,teach_data = tr.make_data(word_lists,value[0],value[1])
 
