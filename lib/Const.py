@@ -11,8 +11,8 @@ class Const():
         self.word_feat_len = 128
         self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
         self.batch_size = 50
-        self.learning_num = 400
         self.learning_num = 10
+        self.learning_num = 150
         # self.seq_num = 40
         # self.buckets = [(5, 10),(10,15)]
         self.buckets = [(40,50)]

@@ -178,6 +178,7 @@ class Trainer(lib.Const.Const):
         
         return sentens
 
+
     # def select_random_sentens(self,word_lists,seq_len):
     #     while(True):
     #         index = random.randint(0,len(word_lists)-2)
@@ -222,10 +223,12 @@ class Trainer(lib.Const.Const):
 
             train_sentens = self.EOF_padding(train_sentens,20)
             teach_sentens = self.EOF_padding(teach_sentens,25)
-
+            print("tr",train_sentens)
+            print("te",teach_sentens)
             teach_sentens.remove("BOS")
             teach_target_sentens = self.EOF_padding(teach_sentens,25)
-
+            print("ta",teach_target_sentens)
+            print("--")
             train_sentens_vec = self.sentens_to_vec(train_sentens)
             teach_sentens_vec = self.sentens_to_vec(teach_sentens)
             teach_target_sentens_vec = self.sentens_to_vec(teach_sentens)
@@ -243,7 +246,7 @@ class Trainer(lib.Const.Const):
 
     def make_sentens_vec(self, decoder_model, states_value, start_token, end_token):
         sentens_vec = []
-        end_len = 5
+        end_len = 20
         word_vec = start_token
 
         stop_condition = False
@@ -300,7 +303,7 @@ def make_sentens_main(tr):
 
     encoder_model, decoder_model = tr.models[-1].make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
 
-    for i in range(2):
+    for i in range(10):
         while(True):
             sentens_arr = tr.select_random_sentens(word_lists)
             sentens_arr = tr.reshape_sentens(sentens_arr)
