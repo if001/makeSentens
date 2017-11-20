@@ -40,8 +40,9 @@ class Seq2Seq(lib.Const.Const):
 
     def make_net(self):
         """ make net by reference to Keras official doc """
-        # input_dim = 20
-        # output_dim = 20
+        # # テスト用ぱらめた
+        # input_dim = 5
+        # output_dim = 5
 
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
@@ -145,9 +146,9 @@ def main():
     inp_batch = []
     out_batch = []
     out_target_batch = []
-    word_len = 20
-    sentens_len = 5
-    start_token_vec = [ 0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0, 2.1,  2.2,  2.3,  2.4,  2.5,  2.6]
+    word_len = 5
+    sentens_len = 3
+    start_token_vec = [ 0.7,  0.8,  0.9,  1. ,  1.1]
     start_token = np.array([[start_token_vec]])
 
     for value in range(seq2seq.batch_size):
@@ -166,9 +167,12 @@ def main():
             out_sentens.append(one_word_teach)
             out_target_sentens.append(one_word_teach)
 
-        print(sentens)
-        print(out_sentens[:-1])
-        print(out_target_sentens)
+        # print(sentens)
+        # print("---")
+        # print(out_sentens[:-1])
+        # print("---")
+        # print(out_target_sentens)
+        # print("---")
 
         inp_batch.append(sentens)
         out_batch.append(out_sentens[:-1])
@@ -176,9 +180,9 @@ def main():
 
     inp_batch = np.array(inp_batch)
     out_batch = np.array(out_batch)
-    out_target_batch = np.array(out_batch)
+    out_target_batch = np.array(out_target_batch)
 
-    for i in range(30):
+    for i in range(15):
         seq2seq.train(inp_batch, out_batch, out_target_batch)
 
     # seq2seq.waitController("save","tmp")
@@ -186,43 +190,22 @@ def main():
     """ test  """
     encoder_model, decoder_model = seq2seq.make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
 
-    # """ test1 """
-    # inp_batch = []
-    # for value in range(seq2seq.batch_size):
-    #     sentens = []
-    #     for j in range(sentens_len):
-    #         one_word = []
-    #         num = random.randint(0,10)/10
-    #         for i in range(word_len):
-    #             one_word.append(num+i/10)
-    #         sentens.append(one_word)
-    #     inp_batch.append(sentens)
+    """ test1 """
+    inp_batch = []
+    for value in range(seq2seq.batch_size):
+        sentens = []
+        for j in range(sentens_len):
+            one_word = []
+            num = random.randint(0,10)/10
+            for i in range(word_len):
+                one_word.append(num+i/10)
+            sentens.append(one_word)
+        inp_batch.append(sentens)
 
-    # states_value = encoder_model.predict(inp_batch)
-    # for seq_index in range(5):
-    #     decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
-    #     print(decord_sentens)
-
-
-    """ test2 """
-    # seq2seq.waitController("load","tmp")
-    inp_batch = [[[1.0,   1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,
-                   2.4,   2.5,  2.6,  2.7,  2.8,  2.9],
-                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
-                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
-                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
-                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
-                  [ 0.6,  0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,
-                    2.,   2.1,  2.2,  2.3,  2.4,  2.5],
-                  [ 0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,
-                    1.8,  1.9,  2. ,  2.1,  2.2 , 2.3]]]
-
-    inp_batch = np.array(inp_batch)
     states_value = encoder_model.predict(inp_batch)
-    decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
-
-    print("inp :",inp_batch)
-    print("test:",decord_sentens)
+    for seq_index in range(5):
+        decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
+        print(decord_sentens)
 
 
 if __name__ == "__main__":

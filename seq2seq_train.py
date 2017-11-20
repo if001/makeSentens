@@ -224,19 +224,17 @@ class Trainer(lib.Const.Const):
             train_index = self.select_bucket(train_sentens,0)
             train_sentens = self.EOF_padding(train_sentens, self.buckets[train_index][0])
             train_sentens = train_sentens[::-1]
-
+            train_sentens_vec = self.sentens_to_vec(train_sentens)
+            train_sentens_vec_batch.append(train_sentens_vec)
+            
             teach_index = self.select_bucket(teach_sentens,1)
             teach_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
+            teach_sentens_vec = self.sentens_to_vec(teach_sentens)
+            teach_sentens_vec_batch.append(teach_sentens_vec)
 
             if "BOS" in teach_sentens: teach_sentens.remove("BOS")
             teach_target_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
-
-            train_sentens_vec = self.sentens_to_vec(train_sentens)
-            teach_sentens_vec = self.sentens_to_vec(teach_sentens)
-            teach_target_sentens_vec = self.sentens_to_vec(teach_sentens)
-
-            train_sentens_vec_batch.append(train_sentens_vec)
-            teach_sentens_vec_batch.append(teach_sentens_vec)
+            teach_target_sentens_vec = self.sentens_to_vec(teach_target_sentens)
             teach_target_sentens_vec_batch.append(teach_target_sentens_vec)
 
         train_sentens_vec_batch = np.array(train_sentens_vec_batch)
@@ -282,7 +280,7 @@ def train_main(tr):
     word_lists = tr.get_word_lists(lib.Const.Const().dict_train_file)
 
     # for value in tr.buckets:
-    for value in TMP_BUCKET:
+    for value in [TMP_BUCKET]:
         print("start bucket ",value)
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
 
@@ -303,8 +301,9 @@ def make_sentens_main(tr):
     tr.init_word2vec("load")
     word_lists = tr.get_word_lists(lib.Const.Const().dict_load_file)
 
+
     # for value in tr.buckets:
-    for value in TMP_BUCKET:
+    for value in [TMP_BUCKET]:
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
         load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
