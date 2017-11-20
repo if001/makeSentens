@@ -33,7 +33,7 @@ class Seq2Seq(lib.Const.Const):
         super().__init__()
         self.input_word_num = 1
         # self.hidden_dim = 7000
-        self.latent_dim = 30
+        self.latent_dim = 15
         self.encord_len = encord_len
         self.decord_len = decord_len
 
@@ -81,7 +81,7 @@ class Seq2Seq(lib.Const.Const):
     def model_complie(self):
         """ complie """
         optimizer = 'rmsprop'
-        optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
+        #optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
         loss = 'mean_squared_error'
@@ -96,13 +96,13 @@ class Seq2Seq(lib.Const.Const):
         """ Run training """
         self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
                                       batch_size=self.batch_size,
-                                      epochs=200,
+                                      epochs=20,
                                       validation_split=0.2)
 
 
-    def predict(self,inp):
-        predict_list = self.sequence_autoencoder.predict_on_batch(inp)
-        return predict_list
+    # def predict(self,inp):
+    #     predict_list = self.sequence_autoencoder.predict_on_batch(inp)
+    #     return predict_list
 
 
     def make_sentens_vec(self, decoder_model, states_value, start_token):
@@ -115,10 +115,10 @@ class Seq2Seq(lib.Const.Const):
             word_vec, h, c = decoder_model.predict([word_vec] + states_value)
             sentens_vec.append(word_vec)
             states_value = [h, c]
-            if (sentens_vec == 0 or len(sentens_vec) == end_len ):
+            if (sentens_vec == 0 or len(sentens_vec) == 5 ):
                 stop_condition = True
 
-        return sentens_vec, states_value
+        return sentens_vec
 
 
     def waitController(self,flag,fname):
@@ -147,70 +147,48 @@ def main():
     out_target_batch = []
     word_len = 20
     sentens_len = 5
+    start_token_vec = [ 0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0, 2.1,  2.2,  2.3,  2.4,  2.5,  2.6]
+    start_token = np.array([[start_token_vec]])
+
     for value in range(seq2seq.batch_size):
         sentens = []
         out_sentens = []
+        out_sentens.append(start_token_vec)
         out_target_sentens = []
         for j in range(sentens_len):
             one_word = []
+            one_word_teach = []
             num = random.randint(0,10)/10
             for i in range(word_len):
                 one_word.append(num+i/10)
-
+                one_word_teach.append((num+i/10)*3)
             sentens.append(one_word)
-            out_sentens.append(one_word)
-            out_target_sentens.append(one_word[::-1])
+            out_sentens.append(one_word_teach)
+            out_target_sentens.append(one_word_teach)
+
+        print(sentens)
+        print(out_sentens[:-1])
+        print(out_target_sentens)
 
         inp_batch.append(sentens)
-        out_batch.append(out_sentens)
-        out_target_batch.append(out_target_sentens)
+        out_batch.append(out_sentens[:-1])
+        out_target_batch.append(out_target_sentens )
 
     inp_batch = np.array(inp_batch)
     out_batch = np.array(out_batch)
     out_target_batch = np.array(out_batch)
-    print(inp_batch.shape,out_batch.shape,out_target_batch.shape)
-    for i in range(10):
+
+    for i in range(30):
         seq2seq.train(inp_batch, out_batch, out_target_batch)
 
     # seq2seq.waitController("save","tmp")
 
-
     """ test  """
     encoder_model, decoder_model = seq2seq.make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
 
-    inp_batch = []
-    for value in range(seq2seq.batch_size):
-        sentens = []
-        for j in range(sentens_len):
-            one_word = []
-            num = random.randint(0,10)/10
-            for i in range(word_len):
-                one_word.append(num+i/10)
-            sentens.append(one_word)
-        inp_batch.append(sentens)
-
-    states_value = encoder_model.predict(inp_batch)
-    for seq_index in range(1):
-        decord_sentens,states = seq2seq.make_sentens_vec(decoder_model, states_value)
-
-
-    # decoded_sentence = decode_sequence(sentens)
-    # 
-    #     # Take one sequence (part of the training test)
-    #     # for trying out decoding.
-    #     input_seq = encoder_input_data[seq_index: seq_index + 1]
-    #     decoded_sentence = decode_sequence(input_seq)
-    #     print('-')
-    #     print('Input selfentence:', input_texts[seq_index])
-    #     print('Decoded sentence:', decoded_sentence)
-
-
-
-    """ test  """
-    # for value in range(10):
-    #     inp_batch = []
-    #     word_len = 20
-    #     sentens_len = 5
+    # """ test1 """
+    # inp_batch = []
+    # for value in range(seq2seq.batch_size):
     #     sentens = []
     #     for j in range(sentens_len):
     #         one_word = []
@@ -220,28 +198,31 @@ def main():
     #         sentens.append(one_word)
     #     inp_batch.append(sentens)
 
-    #     inp_batch = np.array(inp_batch)
+    # states_value = encoder_model.predict(inp_batch)
+    # for seq_index in range(5):
+    #     decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
+    #     print(decord_sentens)
 
-    #     predict = seq2seq.predict(inp_batch)
-    #     print("inp :",inp_batch)
-    #     print("test:",predict)
 
-
+    """ test2 """
     # seq2seq.waitController("load","tmp")
-    # inp_batch = [[[ 0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0,
-    #                 2.1,  2.2,  2.3,  2.4,  2.5,  2.6],
-    #               [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
-    #                 1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
-    #               [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
-    #                 1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
-    #               [ 0.6,  0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,
-    #                 2.,   2.1,  2.2,  2.3,  2.4,  2.5],
-    #               [ 0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,
-    #                 1.8,  1.9,  2. ,  2.1,  2.2 , 2.3]]]
-    # inp_batch = np.array(inp_batch)
-    # predict = seq2seq.predict(inp_batch)
-    # print("inp :",inp_batch)
-    # print("test:",predict)
+    inp_batch = [[[1.0,   1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,  2.0,  2.1,  2.2,  2.3,
+                   2.4,   2.5,  2.6,  2.7,  2.8,  2.9],
+                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
+                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
+                  [ 0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,
+                    1.5,  1.6,  1.7,  1.8,  1.9,  2.0],
+                  [ 0.6,  0.7,  0.8,  0.9,  1. ,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,  1.9,
+                    2.,   2.1,  2.2,  2.3,  2.4,  2.5],
+                  [ 0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,
+                    1.8,  1.9,  2. ,  2.1,  2.2 , 2.3]]]
+
+    inp_batch = np.array(inp_batch)
+    states_value = encoder_model.predict(inp_batch)
+    decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
+
+    print("inp :",inp_batch)
+    print("test:",decord_sentens)
 
 
 if __name__ == "__main__":

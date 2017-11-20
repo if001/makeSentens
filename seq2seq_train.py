@@ -45,6 +45,7 @@ import nn
 #import cythonFunc
 import cython_package.cython_package as cy
 
+TMP_BUCKET = (20,25)
 
 class Trainer(lib.Const.Const):
     def __init__(self):
@@ -216,19 +217,16 @@ class Trainer(lib.Const.Const):
                 train_sentens = self.reshape_sentens(train_sentens)
                 teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                 teach_sentens = self.reshape_sentens(teach_sentens)
-                bucket_index = [(5, 10), (10, 15), (20, 25), (40, 50)].index((20,25))
+                bucket_index = [(5, 10), (10, 15), (20, 25), (40, 50)].index(TMP_BUCKET)
                 if((self.select_bucket(train_sentens,0) < bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
 
-            #train_sentens = train_sentens[::-1] # 逆順にする
+            if "BOS" in train_sentens: train_sentens.remove("BOS")
+            train_sentens = self.EOF_padding(train_sentens,TMP_BUCKET[0])
+            train_sentens = train_sentens[::-1]
+            teach_sentens = self.EOF_padding(teach_sentens,TMP_BUCKET[1])
+            if "BOS" in teach_sentens: teach_sentens.remove("BOS")
+            teach_target_sentens = self.EOF_padding(teach_sentens,TMP_BUCKET[1])
 
-            train_sentens = self.EOF_padding(train_sentens,20)
-            teach_sentens = self.EOF_padding(teach_sentens,25)
-            print("tr",train_sentens)
-            print("te",teach_sentens)
-            teach_sentens.remove("BOS")
-            teach_target_sentens = self.EOF_padding(teach_sentens,25)
-            print("ta",teach_target_sentens)
-            print("--")
             train_sentens_vec = self.sentens_to_vec(train_sentens)
             teach_sentens_vec = self.sentens_to_vec(teach_sentens)
             teach_target_sentens_vec = self.sentens_to_vec(teach_sentens)
@@ -306,11 +304,14 @@ def make_sentens_main(tr):
     for i in range(10):
         while(True):
             sentens_arr = tr.select_random_sentens(word_lists)
-            sentens_arr = tr.reshape_sentens(sentens_arr)
             if(tr.select_bucket(sentens_arr) == 1): break
 
-        print(">> ",tr.sentens_array_to_str(sentens_arr[1:]))
-        sentens_arr = tr.EOF_padding(sentens_arr,20)
+        if "BOS" in sentens_arr: sentens_arr.remove("BOS")
+        sentens_arr = tr.reshape_sentens(sentens_arr)
+        print(">> ",tr.sentens_array_to_str(sentens_arr))
+        sentens_arr = tr.EOF_padding(sentens_arr,TMP_BUCKET[0])
+        sentens_arr = sentens_arr[::-1]
+
         sentens_vec = tr.sentens_to_vec(sentens_arr)
         sentens_vec = np.array([sentens_vec])
         states_value = encoder_model.predict(sentens_vec)
