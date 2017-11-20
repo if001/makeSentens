@@ -45,7 +45,8 @@ import nn
 #import cythonFunc
 import cython_package.cython_package as cy
 
-TMP_BUCKET = (20,25)
+# TMP_BUCKET = (20,25)
+TMP_BUCKET = (10,15)
 
 class Trainer(lib.Const.Const):
     def __init__(self):
@@ -213,19 +214,22 @@ class Trainer(lib.Const.Const):
         for j in range(self.batch_size):
             while(True):
                 train_sentens = self.select_random_sentens(word_lists)
-                train_sentens = self.select_random_sentens(word_lists)
                 train_sentens = self.reshape_sentens(train_sentens)
                 teach_sentens = word_lists[word_lists.index(train_sentens)+1]
                 teach_sentens = self.reshape_sentens(teach_sentens)
-                bucket_index = [(5, 10), (10, 15), (20, 25), (40, 50)].index(TMP_BUCKET)
+                bucket_index = self.buckets.index(TMP_BUCKET)
                 if((self.select_bucket(train_sentens,0) < bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
 
             if "BOS" in train_sentens: train_sentens.remove("BOS")
-            train_sentens = self.EOF_padding(train_sentens,TMP_BUCKET[0])
+            train_index = self.select_bucket(train_sentens,0)
+            train_sentens = self.EOF_padding(train_sentens, self.buckets[train_index][0])
             train_sentens = train_sentens[::-1]
-            teach_sentens = self.EOF_padding(teach_sentens,TMP_BUCKET[1])
+
+            teach_index = self.select_bucket(teach_sentens,1)
+            teach_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
+
             if "BOS" in teach_sentens: teach_sentens.remove("BOS")
-            teach_target_sentens = self.EOF_padding(teach_sentens,TMP_BUCKET[1])
+            teach_target_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
 
             train_sentens_vec = self.sentens_to_vec(train_sentens)
             teach_sentens_vec = self.sentens_to_vec(teach_sentens)
@@ -237,8 +241,11 @@ class Trainer(lib.Const.Const):
 
         train_sentens_vec_batch = np.array(train_sentens_vec_batch)
         teach_sentens_vec_batch = np.array(teach_sentens_vec_batch)
-        teach_sentens_vec_batch = np.array(teach_target_sentens_vec_batch)
-
+        teach_target_sentens_vec_batch = np.array(teach_target_sentens_vec_batch)
+        # print(train_sentens_vec_batch.shape)
+        # print(teach_sentens_vec_batch.shape)
+        # print(teach_target_sentens_vec_batch.shape)
+        
         return train_sentens_vec_batch, teach_sentens_vec_batch, teach_target_sentens_vec_batch
 
 
@@ -274,7 +281,8 @@ def train_main(tr):
 
     word_lists = tr.get_word_lists(lib.Const.Const().dict_train_file)
 
-    for value in tr.buckets:
+    # for value in tr.buckets:
+    for value in TMP_BUCKET:
         print("start bucket ",value)
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
 
@@ -295,7 +303,8 @@ def make_sentens_main(tr):
     tr.init_word2vec("load")
     word_lists = tr.get_word_lists(lib.Const.Const().dict_load_file)
 
-    for value in tr.buckets:
+    # for value in tr.buckets:
+    for value in TMP_BUCKET:
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
         load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 

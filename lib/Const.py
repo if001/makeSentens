@@ -16,8 +16,7 @@ class Const():
         # self.seq_num = 40
         # self.buckets = [(5, 10),(10,15)]
         self.buckets = [(40,50)]
-        self.buckets = [(20,25)]
-        #self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+        self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
         """ directory setting"""
         self.project_dir = lib.set_project.get_path()
