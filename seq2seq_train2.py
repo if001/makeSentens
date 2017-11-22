@@ -130,7 +130,8 @@ def train_main(tr):
 
 def make_sentens_main(tr):
     tr.init_word2vec("load")
-    ds = lib.DataShaping()
+    ds = lib.DataShaping.DataShaping()
+    so = lib.StringOperation.StringOperation()
 
     word_lists = get_word_lists(lib.Const.Const().dict_load_file)
 
@@ -144,18 +145,18 @@ def make_sentens_main(tr):
 
     for i in range(10):
         sentens_arr_vec, _, _ = ds.make_data(word_lists,value[0],value[1],1)
-        print(">> ",StringOperation().sentens_vec_to_word(sentens_arr_vec))
+        print(">> ",so.sentens_array_to_str(so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])))
         states_value = encoder_model.predict(sentens_arr_vec)
 
-        start_token = tr.sentens_to_vec(["BOS"])
+        start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])
-        end_token = tr.sentens_to_vec(["。"])
+        end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
 
         decord_sentens_vec = tr.make_sentens_vec(decoder_model, states_value, start_token, end_token)
 
-        decord_sentens_arr = StringOperation().sentens_vec_to_sentens_arr(decord_sentens_vec)
-        sentens = StringOperation().sentens_array_to_str(decord_sentens_arr)
+        decord_sentens_arr = so.sentens_vec_to_sentens_arr(decord_sentens_vec)
+        sentens = so.sentens_array_to_str(decord_sentens_arr)
         print(sentens)
         print("--")
 
@@ -170,7 +171,7 @@ def main():
         make_sentens_main(tr)
 
     else:
-        print("flag is invalid!")
+        print("consol execute flag is invalid!")
 
 
 if __name__ == "__main__" :

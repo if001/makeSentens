@@ -22,27 +22,19 @@ class StringOperation(lib.Const.Const):
     def sentens_array_to_vec(self,sentens_arr):
         __sentens_vec = []
         for value in sentens_arr:
-            vec = self.word2vec.get_vector(value)
-            __sentens_vec.append(vec)
+            try:
+                __vec = self.word2vec.get_vector(value)
+            except ValueError:
+                __vec = self.word2vec.get_similar_vector(value)
+            __sentens_vec.append(__vec)
         return __sentens_vec
-
-    def sentens_vec_to_word(self,predict_sentens_vec):
-        __output_sentens = ""
-        for value in predict_sentens_vec:
-            word = self.word2vec.get_word(value)
-            __output_sentens += (word+",")
-            if (word == "。"): break
-        return __output_sentens
 
 
     def sentens_vec_to_sentens_arr(self,sentens_vec):
         """ if word does not exist in bocablaly , Substitute with an alternative word """
         __arr = []
         for value in sentens_vec:
-            try :
-                __word = self.word2vec.get_word(value)
-            except :
-                __word = self.word2vec.get_most_similar_word(value)
+            __word = self.word2vec.get_word(value)
             __arr.append(__word)
         return __arr
 
