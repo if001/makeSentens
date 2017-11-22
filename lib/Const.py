@@ -15,11 +15,11 @@ class Const():
         self.learning_num = 150
         # self.seq_num = 40
         # self.buckets = [(5, 10),(10,15)]
-        self.buckets = [(40,50)]
+        # self.buckets = [(40,50)]
         self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
 
         """ directory setting"""
-        self.project_dir = lib.set_project.get_path()
+        self.project_dir = lib.SetProject.get_path()
         # self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/param_make_sentens_seq2seq_rnp.hdf5'
         # self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'
         self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'

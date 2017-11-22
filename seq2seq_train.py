@@ -54,17 +54,6 @@ class Trainer(lib.Const.Const):
         self.window_size = 1
         self.models = []
 
-
-    def init_word2vec(self,flag):
-        self.word2vec = lib.wordvec.MyWord2Vec()
-        if flag == "learn":
-            self.word2vec.train(self.dict_train_file)
-        elif flag == "load":
-            self.word2vec.load_model()
-        else:
-            print("not word2vec model")
-            exit(0)
-
     def fact_seq2seq(self,encord_len,decord_len):
         """
         #buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
