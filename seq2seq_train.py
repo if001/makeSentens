@@ -33,10 +33,6 @@ import random
 
 
 # mylib
-# from mecab_test import get_words
-# from Const import Const
-# from progress_time import ProgressTime
-
 import lib
 import nn
 
@@ -48,193 +44,33 @@ import cython_package.cython_package as cy
 # TMP_BUCKET = (20,25)
 TMP_BUCKET = (10,15)
 
+
 class Trainer(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.window_size = 1
         self.models = []
 
+
+    def init_word2vec(self,flag):
+        self.word2vec = lib.WordVec.MyWord2Vec()
+        if flag == "learn":
+            self.word2vec.train(self.dict_train_file)
+        elif flag == "load":
+            self.word2vec.load_model()
+        else:
+            print("not word2vec model")
+            exit(0)
+
     def fact_seq2seq(self,encord_len,decord_len):
         """
         #buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
         """
-        # for value in self.buckets:
-        #     self.models.append(nn.Seq2Seq.Seq2Seq(value[0],value[1]))
-        # models[-1].make_net()
-        self.models.append(nn.Seq2SeqOfficial.Seq2Seq(encord_len,decord_len))
-        # self.models.append(nn.Seq2Seq.Seq2Seq(encord_len,decord_len))
+        for value in [TMP_BUCKET]:
+            self.models.append(nn.Seq2SeqOfficial.Seq2Seq(value[0],value[1]))
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = self.models[-1].make_net()
         self.models[-1].model_complie()
         return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
-
-
-    def sentens_array_to_str(self,sentens_array):
-        __sentens = ""
-        for value in sentens_array:
-            __sentens += value
-            if (value == "。"): break
-        return __sentens
-
-
-    def sentens_to_vec(self,sentens):
-        __sentens_vec = []
-        for value in sentens:
-            vec = self.word2vec.get_vector(value)
-            __sentens_vec.append(vec)
-        return __sentens_vec
-
-
-    def select_bucket(self,sentens_arr,flag=0):
-        """ flag=0 is train, flag=1 is teach """
-        __buckets = [(5, 10), (10, 15), (20, 25), (40, 50),(100,100)]
-        index = 0
-        for i in range(len(__buckets)-1):
-            if (len(sentens_arr) > __buckets[i][flag]):
-                index = __buckets.index(__buckets[i+1])
-        return index
-
-
-    # def select_bucket(self,sentens_arr):
-    #     """ """
-    #     index = 0
-    #     for i in range(len(self.buckets)-1):
-    #         if (len(sentens_arr) > self.buckets[i][0]):
-    #             index = self.buckets.index(self.buckets[i+1])
-    #     return index
-
-
-    def predict_sentens_vec(self,sentens_arr):
-        print(">> " + self.sentens_array_to_str(sentens_arr))
-        bucket_index = self.select_bucket(sentens_arr)
-
-        #__seq_num = self.buckets[bucket_index][0]
-        __seq_num = self.buckets[0][0]
-
-        __sentens_vec = self.sentens_to_vec(sentens_arr[::-1])
-        __sentens_vec = self.zero_padding(__sentens_vec,__seq_num)
-        __sentens_vec = np.array(__sentens_vec)
-        __sentens_vec = __sentens_vec.reshape(1,__seq_num,self.word_feat_len)
-        __predict_sentens_vec = self.models[bucket_index].predict(__sentens_vec)
-        __predict_sentens_vec = __predict_sentens_vec.reshape(self.buckets[bucket_index][1],self.word_feat_len)
-        return __predict_sentens_vec
-
-
-    def sentens_vec_to_word(self,predict_sentens_vec):
-        __output_sentens = ""
-        for value in predict_sentens_vec:
-            word = self.word2vec.get_word(value)
-            __output_sentens += (word+",")
-            if (word == "。"): break
-        return __output_sentens
-
-
-    def sentens_vec_to_sentens_arr(self,sentens_vec):
-        __arr = []
-        for value in sentens_vec:
-            __arr.append(self.word2vec.get_word(value)) 
-        return __arr
-
-
-    def glaph_plot(self,vec):
-        i = 1
-        fig = plt.figure()
-        for value in vec:
-            plt.subplot(6,5,i)
-            t = range(len(value))
-            plt.plot(t,value)
-            plt.ylim(-2,2)
-            i+=1
-
-
-    def EOF_padding(self,sentens,seq_num):
-        if seq_num > len(sentens):
-            __diff_len = seq_num - len(sentens)
-            for i in range(__diff_len):
-                sentens.append("。")
-        return sentens
-
-
-    def zero_padding(self,sentens_vec,seq_num):
-        if seq_num > len(sentens_vec):
-            __diff_len = seq_num - len(sentens_vec)
-            for i in range(__diff_len):
-                sentens_vec.append([0 for i in range(self.word_feat_len)])
-        return sentens_vec
-
-
-    def reshape_sentens(self,sentens):
-        if ('「' in sentens): sentens.remove('「')
-        if ('」' in sentens): sentens.remove('」')
-        while '' in sentens: sentens.remove('')
-        
-        return sentens
-
-
-    # def select_random_sentens(self,word_lists,seq_len):
-    #     while(True):
-    #         index = random.randint(0,len(word_lists)-2)
-    #         __sentens = word_lists[index]
-    #         __sentens = self.reshape_sentens(__sentens)
-    #         if (len(__sentens) <= seq_len): break
-    #     return __sentens
-
-    def select_random_sentens(self,word_lists):
-        index = random.randint(0,len(word_lists)-2)
-        __sentens = word_lists[index]
-        return __sentens
-
-
-    def get_word_lists(self,file_path):
-        print("make wordlists")
-        lines = open(file_path).read().split("。")
-        wordlists = []
-        for line in lines:
-            wordlists.append(line.split(" "))
-
-        print("wordlist num:",len(wordlists))
-        return wordlists
-
-
-    def make_data(self,word_lists,encord_len,decord_len):
-        train_sentens_vec_batch = []
-        teach_sentens_vec_batch = []
-        teach_target_sentens_vec_batch = []
-
-        for j in range(self.batch_size):
-            while(True):
-                train_sentens = self.select_random_sentens(word_lists)
-                train_sentens = self.reshape_sentens(train_sentens)
-                teach_sentens = word_lists[word_lists.index(train_sentens)+1]
-                teach_sentens = self.reshape_sentens(teach_sentens)
-                bucket_index = self.buckets.index(TMP_BUCKET)
-
-                if((self.select_bucket(train_sentens,0) < bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
-
-            if "BOS" in train_sentens: train_sentens.remove("BOS")
-            train_index = self.select_bucket(train_sentens,0)
-            train_sentens = self.EOF_padding(train_sentens, self.buckets[train_index][0])
-            train_sentens = train_sentens[::-1]
-            train_sentens_vec = self.sentens_to_vec(train_sentens)
-            train_sentens_vec_batch.append(train_sentens_vec)
-            
-            teach_index = self.select_bucket(teach_sentens,1)
-            teach_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
-            teach_sentens_vec = self.sentens_to_vec(teach_sentens)
-            teach_sentens_vec_batch.append(teach_sentens_vec)
-
-            if "BOS" in teach_sentens: teach_sentens.remove("BOS")
-            teach_target_sentens = self.EOF_padding(teach_sentens, self.buckets[teach_index][1])
-            teach_target_sentens_vec = self.sentens_to_vec(teach_target_sentens)
-            teach_target_sentens_vec_batch.append(teach_target_sentens_vec)
-
-        train_sentens_vec_batch = np.array(train_sentens_vec_batch)
-        teach_sentens_vec_batch = np.array(teach_sentens_vec_batch)
-        teach_target_sentens_vec_batch = np.array(teach_target_sentens_vec_batch)
-        # print(train_sentens_vec_batch.shape)
-        # print(teach_sentens_vec_batch.shape)
-        # print(teach_target_sentens_vec_batch.shape)
-        
-        return train_sentens_vec_batch, teach_sentens_vec_batch, teach_target_sentens_vec_batch
 
 
     def make_sentens_vec(self, decoder_model, states_value, start_token, end_token):
@@ -253,12 +89,15 @@ class Trainer(lib.Const.Const):
         return sentens_vec
 
 
-def save_wait(train_model,fname):
-    train_model.waitController("save",fname)
+def get_word_lists(file_path):
+    print("make wordlists")
+    lines = open(file_path).read().split("。")
+    wordlists = []
+    for line in lines:
+        wordlists.append(line.split(" "))
 
-
-def load_wait(train_model,fname):
-    train_model.waitController("load",fname)
+    print("wordlist num:",len(wordlists))
+    return wordlists
 
 
 def train_main(tr):
@@ -267,7 +106,9 @@ def train_main(tr):
     else:
         tr.init_word2vec("learn")
 
-    word_lists = tr.get_word_lists(lib.Const.Const().dict_train_file)
+    ds = lib.DataShaping.DataShaping()
+
+    word_lists = get_word_lists(lib.Const.Const().dict_train_file)
 
     # for value in tr.buckets:
     for value in [TMP_BUCKET]:
@@ -276,53 +117,46 @@ def train_main(tr):
 
         if '--resume' in sys.argv:
             print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-            load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            tr.models[-1].waitController('load','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
-        train_data, teach_data, teach_target_data = tr.make_data(word_lists,value[0],value[1])
+        train_data, teach_data, teach_target_data = ds.make_data(word_lists,value[0],value[1],tr.batch_size)
 
         print("learninig lstm start")
         for i in range(lib.Const.Const().learning_num):
             print("train step : ",i)
             tr.models[-1].train(train_data, teach_data, teach_target_data)
-            save_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
 
 def make_sentens_main(tr):
     tr.init_word2vec("load")
-    word_lists = tr.get_word_lists(lib.Const.Const().dict_load_file)
+    ds = lib.DataShaping.DataShaping()
+    so = lib.StringOperation.StringOperation()
 
+    word_lists = get_word_lists(lib.Const.Const().dict_load_file)
 
     # for value in tr.buckets:
     for value in [TMP_BUCKET]:
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
-        load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        tr.models[-1].waitController('load','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
     encoder_model, decoder_model = tr.models[-1].make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
 
+
     for i in range(10):
-        while(True):
-            sentens_arr = tr.select_random_sentens(word_lists)
-            if(tr.select_bucket(sentens_arr) == 1): break
+        sentens_arr_vec, _, _ = ds.make_data(word_lists,value[0],value[1],1)
+        print(">> ",so.sentens_array_to_str(so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])))
+        states_value = encoder_model.predict(sentens_arr_vec)
 
-        if "BOS" in sentens_arr: sentens_arr.remove("BOS")
-        sentens_arr = tr.reshape_sentens(sentens_arr)
-        print(">> ",tr.sentens_array_to_str(sentens_arr))
-        sentens_arr = tr.EOF_padding(sentens_arr,TMP_BUCKET[0])
-        sentens_arr = sentens_arr[::-1]
-
-        sentens_vec = tr.sentens_to_vec(sentens_arr)
-        sentens_vec = np.array([sentens_vec])
-        states_value = encoder_model.predict(sentens_vec)
-
-        start_token = tr.sentens_to_vec(["BOS"])
+        start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])
-        end_token = tr.sentens_to_vec(["。"])
+        end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
 
         decord_sentens_vec = tr.make_sentens_vec(decoder_model, states_value, start_token, end_token)
 
-        decord_sentens_arr = tr.sentens_vec_to_sentens_arr(decord_sentens_vec)
-        sentens = tr.sentens_array_to_str(decord_sentens_arr)
+        decord_sentens_arr = so.sentens_vec_to_sentens_arr(decord_sentens_vec)
+        sentens = so.sentens_array_to_str(decord_sentens_arr)
         print(sentens)
         print("--")
 
@@ -337,7 +171,7 @@ def main():
         make_sentens_main(tr)
 
     else:
-        print("flag is invalid!")
+        print("consol execute flag is invalid!")
 
 
 if __name__ == "__main__" :
