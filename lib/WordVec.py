@@ -3,7 +3,6 @@
 import gensim
 from gensim.models import word2vec
 #from gensim import models as mod
-
 #import pylab as plt
 
 import numpy as np
@@ -11,9 +10,11 @@ import numpy as np
 # mylib
 import lib
 
+
 class MyWord2Vec(lib.Const.Const):
     def __init__(self):
         super().__init__()
+
 
     def train(self,fname,saveflag="save"):
         sentences = gensim.models.word2vec.Text8Corpus(fname)
@@ -23,27 +24,38 @@ class MyWord2Vec(lib.Const.Const):
             print("save "+self.word2vec_wait)
             self.model.save(self.word2vec_wait)
 
+
     def load_model(self):
         # 読み込み
         print("load "+self.word2vec_wait)
         self.model = word2vec.Word2Vec.load(self.word2vec_wait)
 
-    def get_vector(self,st):
-        return self.model.wv[st]
 
-    def get_similar(self,st,top):
+    def get_word(self,vec):
+        return self.model.most_similar( [ vec ], [], 1)[0][0]
+
+
+    def similar_words(self,st,top):
         # 類似ワード出力
         results = self.model.most_similar(positive=st, topn=top)
         for result in results:
             print(result[0], '\t', result[1])
 
-    def get_word(self,vec):
-        return self.model.most_similar( [ vec ], [], 1)[0][0]
+
+    def get_vector(self,st):
+        return self.model.wv[st]
+
+
+    def get_similar_vector(self,st):
+        __st = self.model.most_similar(positive=st, topn=1)[0][0]
+        return self.model.wv[__st]
+
 
 def plot(vec):
     t = range(len(vec))
     plt.plot(t,vec)
     plt.show()
+
 
 def main():
     net = MyWord2Vec()

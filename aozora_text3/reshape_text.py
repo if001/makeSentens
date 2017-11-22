@@ -32,7 +32,7 @@ class File():
         flag = 0
         # 半角
         if (("-" in line ) == True): flag += 1
-        
+
         # if (("[" in line ) == True): flag += 1
         # if (("]" in line ) == True): flag += 1
         # if (("(" in line ) == True): flag += 1
@@ -68,10 +68,10 @@ class File():
         if (("公開" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
         if (("修正" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
         if (("発行" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
-        
+
         return flag
 
-    
+
     def rm_between(self,line):
         line = re.sub(r'.《.+?.》', "", line)
         # line = re.sub(r'.(.+?.)', "", line)
@@ -81,10 +81,19 @@ class File():
 
         return line
 
+
     def delword(self,line):
+        line = re.sub(r'\n', "", line)
+        line = re.sub(r'「', "", line)
+        line = re.sub(r'」', "", line)
         line = re.sub(r'【', "", line)
         line = re.sub(r'】', "", line)
         line = re.sub(r'\u3000', "", line)
+        return line
+
+
+    def add_token(self,line):
+        line = re.sub(r'。', "。 BOS", line)
         return line
 
 
@@ -99,8 +108,8 @@ class File():
                 if (self.checkline(line) == 0) :
                     line = self.rm_between(line)
                     line = self.delword(line)
+                    line = self.add_token(line)
                     self.getlines.append(line)
-
 
 
     def writefile(self,fname):
