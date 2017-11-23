@@ -145,8 +145,8 @@ def make_sentens_main(tr):
 
     for i in range(10):
         sentens_arr_vec, _, _ = ds.make_data(word_lists,value[0],value[1],1)
-        print(">> ",so.sentens_vec_to_sentens_arr(sentens_arr_vec[0]))
-        print(">> ",so.sentens_array_to_str(so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])))
+        __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
+        print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
         states_value = encoder_model.predict(sentens_arr_vec)
 
         start_token = so.sentens_array_to_vec(["BOS"])

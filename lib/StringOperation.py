@@ -12,12 +12,15 @@ class StringOperation(lib.Const.Const):
             print("not set word2vec model")
             exit(0)
 
+
+
     def sentens_array_to_str(self,sentens_array):
         __sentens = ""
         for value in sentens_array:
             __sentens += value
             if (value == "。"): break
         return __sentens
+
 
     def sentens_array_to_vec(self,sentens_arr):
         __sentens_vec = []
