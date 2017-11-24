@@ -125,7 +125,8 @@ def train_main(tr):
         for i in range(lib.Const.Const().learning_num):
             print("train step : ",i)
             tr.models[-1].train(train_data, teach_data, teach_target_data)
-            tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            if i % 100 == 0 :
+                tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
 
 def make_sentens_main(tr):

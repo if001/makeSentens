@@ -97,7 +97,7 @@ class Seq2Seq(lib.Const.Const):
         """ Run training """
         self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
                                       batch_size=self.batch_size,
-                                      epochs=20,
+                                      epochs=1,
                                       validation_split=0.2)
 
 
