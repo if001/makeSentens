@@ -29,11 +29,11 @@ class Const():
 
 
         # self.dict_train_file = self.project_dir+'/aozora_text3/files/files_all_umn.txt'
-        self.dict_train_file = self.project_dir+"/aozora_text3/files/files_all_rnp.txt"
+        self.dict_train_file = self.project_dir+"/aozora_text/files/files_all_rnp.txt"
 
         # self.dict_train_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
 
-        self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_rnp.txt"
+        self.dict_load_file = self.project_dir+"/aozora_text/files/files_all_rnp.txt"
         # self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
 
         self.word2vec_wait = self.project_dir+'/lib/model/text8_rnp.model'
