@@ -13,7 +13,6 @@ class StringOperation(lib.Const.Const):
             exit(0)
 
 
-
     def sentens_array_to_str(self,sentens_array):
         __sentens = ""
         for value in sentens_array:
@@ -25,10 +24,15 @@ class StringOperation(lib.Const.Const):
     def sentens_array_to_vec(self,sentens_arr):
         __sentens_vec = []
         for value in sentens_arr:
-            try:
-                __vec = self.word2vec.get_vector(value)
-            except ValueError:
-                __vec = self.word2vec.get_similar_vector(value)
+            __vec = self.word2vec.get_vector2(value)
+            # try:
+            #     __vec = self.word2vec.get_vector(value)
+            # except ValueError:
+            #     print("value error",value)
+            #     __vec = self.word2vec.get_similar_vector(value)
+            # except KeyError:
+            #     print("key error",value)
+            #     __vec = self.word2vec.get_similar_vector(value)
             __sentens_vec.append(__vec)
         return __sentens_vec
 

@@ -46,36 +46,37 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-        encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(encoder_inputs)
-        encoder_states = [state_h, state_c]
+        self.encoder_inputs = Input(shape=(None, input_dim))
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(self.encoder_inputs)
+        self.encoder_states = [state_h, state_c]
 
-        decoder_inputs = Input(shape=(None, input_dim))
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
-        decoder_dense = Dense(output_dim, activation='linear')
-        decoder_outputs = decoder_dense(decoder_outputs)
+        self.decoder_inputs = Input(shape=(None, input_dim))
+        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
+        self.decoder_dense = Dense(output_dim, activation='linear')
+        decoder_outputs = self.decoder_dense(decoder_outputs)
 
-        self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-        return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
+        self.sequence_autoencoder = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs)
+
+        # return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
 
 
-    def make_decode_net(self, encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense):
+    def make_decode_net(self):
         """ for decoding net """
 
-        encoder_model = Model(encoder_inputs, encoder_states)
+        self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
 
         decoder_state_input_h = Input(shape=(self.latent_dim,))
         decoder_state_input_c = Input(shape=(self.latent_dim,))
         decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-        decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+        decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
 
         decoder_states = [state_h, state_c]
-        decoder_outputs = decoder_dense(decoder_outputs)
-        decoder_model = Model(
-            [decoder_inputs] + decoder_states_inputs,
+        decoder_outputs = self.decoder_dense(decoder_outputs)
+        self.decoder_model = Model(
+            [self.decoder_inputs] + decoder_states_inputs,
             [decoder_outputs] + decoder_states)
-        return encoder_model, decoder_model
+        # return encoder_model, decoder_model
 
 
     def model_complie(self):
@@ -128,7 +129,7 @@ class Seq2Seq(lib.Const.Const):
 
 def main():
     seq2seq = Seq2Seq(5,5)
-    encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = seq2seq.make_net()
+    seq2seq.make_net()
     seq2seq.model_complie()
 
     # load_wait(tr.models[-1],'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
@@ -161,13 +162,6 @@ def main():
             out_sentens.append(one_word_teach)
             out_target_sentens.append(one_word_teach)
 
-        # print(sentens)
-        # print("---")
-        # print(out_sentens[:-1])
-        # print("---")
-        # print(out_target_sentens)
-        # print("---")
-
         inp_batch.append(sentens)
         out_batch.append(out_sentens[:-1])
         out_target_batch.append(out_target_sentens )
@@ -182,7 +176,7 @@ def main():
     # seq2seq.waitController("save","tmp")
 
     """ test  """
-    encoder_model, decoder_model = seq2seq.make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
+    seq2seq.make_decode_net()
 
     """ test1 """
     inp_batch = []
@@ -196,9 +190,9 @@ def main():
             sentens.append(one_word)
         inp_batch.append(sentens)
 
-    states_value = encoder_model.predict(inp_batch)
+    states_value = seq2seq.encoder_model.predict(inp_batch)
     for seq_index in range(5):
-        decord_sentens = seq2seq.make_sentens_vec(decoder_model, states_value, start_token)
+        decord_sentens = seq2seq.make_sentens_vec(seq2seq.decoder_model, states_value, start_token)
         print(decord_sentens)
 
 

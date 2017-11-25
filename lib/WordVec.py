@@ -51,6 +51,18 @@ class MyWord2Vec(lib.Const.Const):
         return self.model.wv[__st]
 
 
+    def get_vector2(self,st):
+        try:
+            __vec = self.model.wv[st]
+        except ValueError:
+            __st = self.model.most_similar(positive=st, topn=1)[0][0]
+            __vec = self.model.wv[__st]
+        except KeyError:
+            __st = self.model.most_similar(positive=st, topn=1)[0][0]
+            __vec = self.model.wv[__st]
+        return __vec
+
+
 def plot(vec):
     t = range(len(vec))
     plt.plot(t,vec)

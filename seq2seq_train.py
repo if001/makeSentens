@@ -42,7 +42,7 @@ import nn
 import cython_package.cython_package as cy
 
 # TMP_BUCKET = (20,25)
-TMP_BUCKET = (10,15)
+# TMP_BUCKET = (10,15)
 
 class Trainer(lib.Const.Const):
     def __init__(self):
@@ -50,6 +50,7 @@ class Trainer(lib.Const.Const):
         self.window_size = 1
         self.models = []
         self.hists = [[],[],[],[]]
+
 
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
@@ -61,15 +62,20 @@ class Trainer(lib.Const.Const):
             print("not word2vec model")
             exit(0)
 
+
     def fact_seq2seq(self,encord_len,decord_len):
         """
-        #buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+        # buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
         """
-        for value in [TMP_BUCKET]:
+        for value in self.buckets :
             self.models.append(nn.Seq2SeqOfficial.Seq2Seq(value[0],value[1]))
-        encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = self.models[-1].make_net()
+        self.models[-1].make_net()
         self.models[-1].model_complie()
-        return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
+
+
+    def select_random_bucket(self):
+        rnd = random.randint(0, len(self.buckets)-1)
+        return self.buckets[rnd]
 
 
     def make_sentens_vec(self, decoder_model, states_value, start_token, end_token):
@@ -96,7 +102,7 @@ class Trainer(lib.Const.Const):
         return hists
 
 
-    def plot(self, hists):
+    def plot(self, hists, save_name):
         labels = ["acc", "val_acc", "loss", "val_loss"]
         color = ["r", "g", "b", "y"]
         # acc
@@ -108,7 +114,7 @@ class Trainer(lib.Const.Const):
         plt.xlabel('epoch')
         plt.ylabel('accuracy')
         plt.grid()
-        plt.savefig("./fig/graph_acc.png")
+        plt.savefig("./fig/graph_acc_"+save_name+".png")
         plt.clf() #一度消去
         plt.cla() #一度消去
 
@@ -120,8 +126,8 @@ class Trainer(lib.Const.Const):
         plt.xlabel('epoch')
         plt.ylabel('loss')
         plt.grid()
-        plt.savefig("./fig/graph_loss.png")
-        print("save glaph")
+        plt.savefig("./fig/graph_loss_"+save_name+".png")
+        print("save " + save_name + " glaph")
         plt.close()
 
 def get_word_lists(file_path):
@@ -145,26 +151,29 @@ def train_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().dict_train_file)
 
-    # for value in tr.buckets:
-    for value in [TMP_BUCKET]:
-        print("start bucket ",value)
-        encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
+    for value in tr.buckets:
+        print("start bucket ", value)
+        tr.fact_seq2seq(value[0], value[1])
 
+
+    while(True):
+        chose_bucket = tr.select_random_bucket()
+        print("chose bucket", chose_bucket)
         if '--resume' in sys.argv:
-            print("resume "+'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-            tr.models[-1].waitController('load','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+            print("resume "+'param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
+            tr.models[-1].waitController('load', 'param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
 
-        train_data, teach_data, teach_target_data = ds.make_data(word_lists,value[0],value[1],tr.batch_size)
+        train_data, teach_data, teach_target_data = ds.make_data(word_lists, tr.batch_size, chose_bucket)
 
-        print("learninig lstm start")
+        print("learninig start")
         for step in range(lib.Const.Const().learning_num):
             print("train step : ", step)
             hist = tr.models[-1].train(train_data, teach_data, teach_target_data)
             tr.hists = tr.append_hist(hist, tr.hists)
 
             if (step % tr.check_point == 0) and (step != 0):
-                tr.plot(tr.hists)
-                tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+                tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
+                tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
 
 
 def make_sentens_main(tr):
@@ -174,8 +183,8 @@ def make_sentens_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().dict_load_file)
 
-    # for value in tr.buckets:
-    for value in [TMP_BUCKET]:
+    for value in tr.buckets:
+    # for value in [TMP_BUCKET]:
         encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
         tr.models[-1].waitController('load','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 

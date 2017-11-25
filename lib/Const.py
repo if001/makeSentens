@@ -11,13 +11,14 @@ class Const():
         self.check_point = 200
         self.word_feat_len = 128
         self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
-        self.batch_size = 70
+        self.batch_size = 64
         self.learning_num = 10
-        self.learning_num = 20000
+        self.learning_num = 200
         # self.seq_num = 40
         # self.buckets = [(5, 10),(10,15)]
         # self.buckets = [(40,50)]
-        self.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+        self.buckets = [(5, 10), (10, 15), (20, 25), (40, 40)]
+        self.buckets = [(5, 10), (10, 15)]
 
         """ directory setting"""
         self.project_dir = lib.SetProject.get_path()
