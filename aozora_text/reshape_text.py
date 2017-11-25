@@ -32,67 +32,102 @@ class File():
         flag = 0
         # 半角
         if (("-" in line ) == True): flag += 1
-        if (("[" in line ) == True): flag += 1
-        if (("]" in line ) == True): flag += 1
-        if (("(" in line ) == True): flag += 1
-        if ((")" in line ) == True): flag += 1
+
+        # if (("[" in line ) == True): flag += 1
+        # if (("]" in line ) == True): flag += 1
+        # if (("(" in line ) == True): flag += 1
+        # if ((")" in line ) == True): flag += 1
 
         # 全角
+        if ((" 〕" in line ) == True): flag += 1
+        if ((" 〔" in line ) == True): flag += 1
         if (("【" in line ) == True): flag += 1
-        if (("】" in line ) == True): flag += 1
+        if (("】" in line ) == True): flag += 1 
         if (("［" in line ) == True): flag += 1
         if (("］" in line ) == True): flag += 1
         # if (("》" in line ) == True): flag += 1
         # if (("《" in line ) == True): flag += 1
-        if (("（" in line ) == True): flag += 1
-        if (("）" in line ) == True): flag += 1
+        # if (("（" in line ) == True): flag += 1
+        # if (("）" in line ) == True): flag += 1
         if (("｜" in line ) == True): flag += 1
         if (("ルビ" in line ) == True): flag += 1
-
-
-
+        if (("（例）" in line ) == True): flag += 1
+        if (("（ 例 ）" in line ) == True): flag += 1
+        if (("［ ＃］" in line ) == True): flag += 1
+        if ("底本" in line) == True: flag += 1
         # 改行のみも除く
         if ((" \n" == line ) == True): flag += 1
         if (("\n" == line ) == True): flag += 1
 
+        # その他
+        if (("＊" in line ) == True): flag += 1
+        if (("http:" in line ) == True): flag += 1
+        if (("青空文庫" in line ) == True): flag += 1
+        if (("入力 ：" in line ) ): flag += 1
+        if (("校正 ：" in line ) ): flag += 1
+        if (("公開" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
+        if (("修正" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
+        if (("発行" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
 
-        if (("＊" == line ) == True): flag += 1
         return flag
 
 
+    def rm_between(self,line):
+        line = re.sub(r'.《.+?.》', "", line)
+        # line = re.sub(r'.(.+?.)', "", line)
+        line = re.sub(r'.（.+?.）', "", line)
+        line = re.sub(r'.［.+?.］', "", line)
+        line = re.sub(r'.[.+?.]', "", line)
+
+        return line
+
+
     def delword(self,line):
-        line = re.sub(r'.《.*.》', "", line)
-        line = re.sub(r'.《.*.》', "", line)
+        line = re.sub(r'\n', "", line)
+        line = re.sub(r'「', "", line)
+        line = re.sub(r'」', "", line)
+        line = re.sub(r'【', "", line)
+        line = re.sub(r'】', "", line)
         line = re.sub(r'\u3000', "", line)
         return line
 
 
+    def add_token(self,line):
+        line = re.sub(r'。', "。 BOS", line)
+        return line
+
+
     def readfile(self,fname):
+        project_dir = os.path.dirname(os.path.abspath(__file__))
         self.getlines = []
-        with open('./'+fname,'r') as file:
+        with open(project_dir + '/' + fname,'r') as file:
+            print("open "+fname)
             line = file.readline()
             while line:
                 line = file.readline()
-                if ("底本" in line) == True: break
                 if (self.checkline(line) == 0) :
-                    result = self.delword(line)
-                    self.getlines.append(result)
-
+                    line = self.rm_between(line)
+                    line = self.delword(line)
+                    line = self.add_token(line)
+                    self.getlines.append(line)
 
 
     def writefile(self,fname):
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        save_dir = "/"
         fname = "re_"+fname
-        with open('./'+fname,'w') as file:
+        with open(project_dir + save_dir + fname,'w') as file:
+            print("save "+ project_dir+save_dir+fname)
             for line in self.getlines:
                 file.writelines(line)
 
 
 def test():
-    st="あいうえ《かきくけこ》あああ\u3000"
-    result = re.sub(r'.《.*.》', "", st)
-    result = re.sub(r'\u3000', "", result)
-    print(result)
-
+    f = File()
+    st="ところが 、 その 予想 が がらっと 外れ 、 意外 や 、 題 を 聴け ば 「 水棲 人 」 。 私 も 、 ちょっと 暫 《 しば ら 》 く は 聴き ちがい で は ない か と 思っ た ほど だ 。 "
+    st = f.rm_between(st)
+    #st = re.sub(r'.《.+?.》', "", st)
+    print(st)
     # new_st = st.replace('《*》','')
     # print(new_st)
 
@@ -105,4 +140,5 @@ def main():
         myfile.writefile(fname)
 
 if __name__ == "__main__" :
+    #test()
     main()
