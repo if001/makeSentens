@@ -95,15 +95,11 @@ class Seq2Seq(lib.Const.Const):
 
     def train(self, encoder_input_data, decoder_input_data, decoder_target_data):
         """ Run training """
-        self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+        loss = self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
                                       batch_size=self.batch_size,
                                       epochs=1,
                                       validation_split=0.2)
-
-
-    # def predict(self,inp):
-    #     predict_list = self.sequence_autoencoder.predict_on_batch(inp)
-    #     return predict_list
+        return loss
 
 
     def make_sentens_vec(self, decoder_model, states_value, start_token):
@@ -133,7 +129,6 @@ class Seq2Seq(lib.Const.Const):
 
 def main():
     seq2seq = Seq2Seq(5,5)
-    #seq2seq.make_net()
     encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = seq2seq.make_net()
     seq2seq.model_complie()
 

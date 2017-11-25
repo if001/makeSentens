@@ -8,6 +8,7 @@ import lib
 class Const():
     def __init__(self):
         """ valiable setting"""
+        self.check_point = 200
         self.word_feat_len = 128
         self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
         self.batch_size = 50

@@ -26,7 +26,7 @@ import random
 import sys
 
 
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 #import pylab as plt
 from itertools import chain #配列ふらっと化
 import random
@@ -44,13 +44,12 @@ import cython_package.cython_package as cy
 # TMP_BUCKET = (20,25)
 TMP_BUCKET = (10,15)
 
-
 class Trainer(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.window_size = 1
         self.models = []
-
+        self.hists = [[],[],[],[]]
 
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
@@ -88,6 +87,42 @@ class Trainer(lib.Const.Const):
 
         return sentens_vec
 
+    def append_hist(self, hist, hists):
+        hists[0].append(hist.history['acc'][0])
+        hists[1].append(hist.history['val_acc'][0])
+
+        hists[2].append(hist.history['loss'][0])
+        hists[3].append(hist.history['val_loss'][0])
+        return hists
+
+
+    def plot(self, hists):
+        labels = ["acc", "val_acc", "loss", "val_loss"]
+        color = ["r", "g", "b", "y"]
+        # acc
+        plt.figure(1)
+        for i in range(2):
+            t = range(len(hists[i]))
+            plt.plot(t, hists[i], label=labels[i], color=color[i])
+        plt.legend()
+        plt.xlabel('epoch')
+        plt.ylabel('accuracy')
+        plt.grid()
+        plt.savefig("./fig/graph_acc.png")
+        plt.clf() #一度消去
+        plt.cla() #一度消去
+
+        plt.figure(2)
+        for i in range(2,4):
+            t = range(len(hists[i]))
+            plt.plot(t, hists[i], label=labels[i], color=color[i])
+        plt.legend()
+        plt.xlabel('epoch')
+        plt.ylabel('loss')
+        plt.grid()
+        plt.savefig("./fig/graph_loss.png")
+        print("save glaph")
+        plt.close()
 
 def get_word_lists(file_path):
     print("make wordlists")
@@ -122,10 +157,13 @@ def train_main(tr):
         train_data, teach_data, teach_target_data = ds.make_data(word_lists,value[0],value[1],tr.batch_size)
 
         print("learninig lstm start")
-        for i in range(lib.Const.Const().learning_num):
-            print("train step : ",i)
-            tr.models[-1].train(train_data, teach_data, teach_target_data)
-            if i % 100 == 0 :
+        for step in range(lib.Const.Const().learning_num):
+            print("train step : ", step)
+            hist = tr.models[-1].train(train_data, teach_data, teach_target_data)
+            tr.hists = tr.append_hist(hist, tr.hists)
+
+            if (step % tr.check_point == 0) and (step != 0):
+                tr.plot(tr.hists)
                 tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
 
 
