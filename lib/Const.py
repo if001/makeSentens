@@ -11,7 +11,7 @@ class Const():
         self.check_point = 200
         self.word_feat_len = 128
         self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
-        self.batch_size = 50
+        self.batch_size = 70
         self.learning_num = 10
         self.learning_num = 20000
         # self.seq_num = 40

@@ -32,7 +32,6 @@ class Seq2Seq(lib.Const.Const):
     def __init__(self, encord_len, decord_len):
         super().__init__()
         self.input_word_num = 1
-        # self.hidden_dim = 7000
         self.latent_dim = 512
         self.encord_len = encord_len
         self.decord_len = decord_len
