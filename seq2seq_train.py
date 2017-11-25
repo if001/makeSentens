@@ -78,9 +78,8 @@ class Trainer(lib.Const.Const):
         return self.buckets[rnd]
 
 
-    def make_sentens_vec(self, decoder_model, states_value, start_token, end_token):
+    def make_sentens_vec(self, decoder_model, states_value, start_token, end_token, end_len):
         sentens_vec = []
-        end_len = 20
         word_vec = start_token
 
         stop_condition = False
@@ -184,25 +183,26 @@ def make_sentens_main(tr):
     word_lists = get_word_lists(lib.Const.Const().dict_load_file)
 
     for value in tr.buckets:
-    # for value in [TMP_BUCKET]:
-        encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense = tr.fact_seq2seq(value[0],value[1])
-        tr.models[-1].waitController('load','param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-
-    encoder_model, decoder_model = tr.models[-1].make_decode_net(encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense)
+        tr.fact_seq2seq(value[0],value[1])
+        tr.models[-1].waitController('load', 'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
+        tr.models[-1].make_decode_net()
 
 
     for i in range(10):
-        sentens_arr_vec, _, _ = ds.make_data(word_lists,value[0],value[1],1)
+        chose_bucket = tr.select_random_bucket()
+        sentens_arr_vec, _, _ = ds.make_data(word_lists, tr.batch_size, chose_bucket)
         __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
         print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
-        states_value = encoder_model.predict(sentens_arr_vec)
+
+        states_value = tr.models[tr.buckets.index(chose_bucket)].encoder_model.predict(sentens_arr_vec)
+        decoder_model = tr.models[tr.buckets.index(chose_bucket)].decoder_model
 
         start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])
         end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
 
-        decord_sentens_vec = tr.make_sentens_vec(decoder_model, states_value, start_token, end_token)
+        decord_sentens_vec = tr.make_sentens_vec(decoder_model, states_value, start_token, end_token, chose_bucket[1])
 
         decord_sentens_arr = so.sentens_vec_to_sentens_arr(decord_sentens_vec)
         sentens = so.sentens_array_to_str(decord_sentens_arr)
