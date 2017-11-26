@@ -100,6 +100,9 @@ class Trainer(lib.Const.Const):
         hists[3].append(hist.history['val_loss'][0])
         return hists
 
+    def save_data(strs,fname):
+        with open("./fig/"+fname, "w") as file:
+            file.writelines(str(strs))
 
     def plot(self, hists, save_name):
         labels = ["acc", "val_acc", "loss", "val_loss"]
@@ -109,6 +112,7 @@ class Trainer(lib.Const.Const):
         for i in range(2):
             t = range(len(hists[i]))
             plt.plot(t, hists[i], label=labels[i], color=color[i])
+            self.save_data(hists[i], labels[i])
         plt.legend()
         plt.xlabel('epoch')
         plt.ylabel('accuracy')
@@ -117,10 +121,12 @@ class Trainer(lib.Const.Const):
         plt.clf() #一度消去
         plt.cla() #一度消去
 
+
         plt.figure(2)
         for i in range(2,4):
             t = range(len(hists[i]))
             plt.plot(t, hists[i], label=labels[i], color=color[i])
+            self.save_data(hists[i], labels[i])
         plt.legend()
         plt.xlabel('epoch')
         plt.ylabel('loss')
