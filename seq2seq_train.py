@@ -53,7 +53,7 @@ class Trainer(lib.Const.Const):
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
         if flag == "learn":
-            self.word2vec.train(self.dict_train_file)
+            self.word2vec.train(self.word2vec_train_file)
         elif flag == "load":
             self.word2vec.load_model()
         else:
@@ -148,7 +148,7 @@ def train_main(tr):
 
     ds = lib.DataShaping.DataShaping()
 
-    word_lists = get_word_lists(lib.Const.Const().dict_train_file)
+    word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
     tr.fact_seq2seq()
 
@@ -177,7 +177,7 @@ def make_sentens_main(tr):
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
 
-    word_lists = get_word_lists(lib.Const.Const().dict_load_file)
+    word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
     tr.fact_seq2seq()
     tr.model.waitController('load', 'param_seq2seq.hdf5')

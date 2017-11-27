@@ -22,22 +22,18 @@ class Const():
 
         """ directory setting"""
         self.project_dir = lib.SetProject.get_path()
-        # self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/param_make_sentens_seq2seq_rnp.hdf5'
+
+        """ word2vec """
+        self.word2vec_train_file = self.project_dir+"/aozora_text/files/files_all_rnp2.txt"
+        self.word2vec_wait = self.project_dir+'/lib/model/text8.model'
+
+
+        """ seq2seq """
         # self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'
         self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'
+        self.seq2seq_train_file = self.project_dir+"/aozora_text/files/files_all_rnp2.txt"
 
-        self.dict_dir = self.project_dir+'/dictionaly/dict.txt'
 
-
-        # self.dict_train_file = self.project_dir+'/aozora_text3/files/files_all_umn.txt'
-        self.dict_train_file = self.project_dir+"/aozora_text/files/files_all_rnp2.txt"
-
-        # self.dict_train_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
-
-        self.dict_load_file = self.project_dir+"/aozora_text/files/files_all_rnp2.txt"
-        # self.dict_load_file = self.project_dir+"/aozora_text3/files/files_all_all.txt"
-
-        self.word2vec_wait = self.project_dir+'/lib/model/text8.model'
 
     # def glaph_plot(self,data):
     #     t = range(len(data))
