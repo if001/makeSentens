@@ -42,13 +42,11 @@ import nn
 import cython_package.cython_package as cy
 
 # TMP_BUCKET = (20,25)
-# TMP_BUCKET = (10,15)
 
 class Trainer(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.window_size = 1
-        self.models = []
         self.hists = [[],[],[],[]]
 
 
@@ -63,14 +61,10 @@ class Trainer(lib.Const.Const):
             exit(0)
 
 
-    def fact_seq2seq(self,encord_len,decord_len):
-        """
-        # buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
-        """
-        for value in self.buckets :
-            self.models.append(nn.Seq2SeqOfficial.Seq2Seq(value[0],value[1]))
-        self.models[-1].make_net()
-        self.models[-1].model_complie()
+    def fact_seq2seq(self):
+        self.model = nn.Seq2SeqOfficial.Seq2Seq()
+        self.model.make_net()
+        self.model.model_complie()
 
 
     def select_random_bucket(self):
@@ -100,7 +94,7 @@ class Trainer(lib.Const.Const):
         hists[3].append(hist.history['val_loss'][0])
         return hists
 
-    def save_data(strs,fname):
+    def save_data(self, strs, fname):
         with open("./fig/"+fname, "w") as file:
             file.writelines(str(strs))
 
@@ -156,29 +150,26 @@ def train_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().dict_train_file)
 
-    for value in tr.buckets:
-        print("start bucket ", value)
-        tr.fact_seq2seq(value[0], value[1])
-
+    tr.fact_seq2seq()
 
     while(True):
+        if '--resume' in sys.argv:
+            print('resume param_seq2seq.hdf5')
+            tr.model.waitController('load', 'param_seq2seq.hdf5')
+
         chose_bucket = tr.select_random_bucket()
         print("chose bucket", chose_bucket)
-        if '--resume' in sys.argv:
-            print("resume "+'param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
-            tr.models[-1].waitController('load', 'param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
-
         train_data, teach_data, teach_target_data = ds.make_data(word_lists, tr.batch_size, chose_bucket)
 
         print("learninig start")
         for step in range(lib.Const.Const().learning_num):
             print("train step : ", step)
-            hist = tr.models[-1].train(train_data, teach_data, teach_target_data)
+            hist = tr.model.train(train_data, teach_data, teach_target_data)
             tr.hists = tr.append_hist(hist, tr.hists)
 
             if (step % tr.check_point == 0) and (step != 0):
-                tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
-                tr.models[-1].waitController('save','param_seq2seq_rnp'+"_"+str(chose_bucket[0])+"_"+str(chose_bucket[1])+'.hdf5')
+                # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
+                tr.model.waitController('save','param_seq2seq.hdf5')
 
 
 def make_sentens_main(tr):
@@ -188,11 +179,9 @@ def make_sentens_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().dict_load_file)
 
-    for value in tr.buckets:
-        tr.fact_seq2seq(value[0],value[1])
-        tr.models[-1].waitController('load', 'param_seq2seq_rnp'+"_"+str(value[0])+"_"+str(value[1])+'.hdf5')
-        tr.models[-1].make_decode_net()
-
+    tr.fact_seq2seq()
+    tr.model.waitController('load', 'param_seq2seq.hdf5')
+    tr.model.make_decode_net()
 
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
@@ -200,8 +189,8 @@ def make_sentens_main(tr):
         __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
         print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
 
-        states_value = tr.models[tr.buckets.index(chose_bucket)].encoder_model.predict(sentens_arr_vec)
-        decoder_model = tr.models[tr.buckets.index(chose_bucket)].decoder_model
+        states_value = tr.model.encoder_model.predict(sentens_arr_vec)
+        decoder_model = tr.model.decoder_model
 
         start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])

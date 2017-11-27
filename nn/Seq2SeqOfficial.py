@@ -29,12 +29,10 @@ import lib
 class Seq2Seq(lib.Const.Const):
     """This is a test program."""
 
-    def __init__(self, encord_len, decord_len):
+    def __init__(self):
         super().__init__()
         self.input_word_num = 1
         self.latent_dim = 512
-        self.encord_len = encord_len
-        self.decord_len = decord_len
 
 
     def make_net(self):
@@ -128,7 +126,7 @@ class Seq2Seq(lib.Const.Const):
 
 
 def main():
-    seq2seq = Seq2Seq(5,5)
+    seq2seq = Seq2Seq()
     seq2seq.make_net()
     seq2seq.model_complie()
 
