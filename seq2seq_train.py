@@ -70,9 +70,10 @@ class Trainer(lib.Const.Const):
     def fact_decode_net(self):
         self.model = nn.Seq2SeqOfficial.Seq2Seq()
         self.model.make_net()
+        self.model.model_complie()
         self.model.waitController('load', 'param_seq2seq.hdf5')
         self.model.make_decode_net()
-
+        
 
     def select_random_bucket(self):
         rnd = random.randint(0, len(self.buckets)-1)
@@ -93,6 +94,7 @@ class Trainer(lib.Const.Const):
 
         return sentens_vec
 
+
     def append_hist(self, hist, hists):
         hists[0].append(hist.history['acc'][0])
         hists[1].append(hist.history['val_acc'][0])
@@ -101,9 +103,11 @@ class Trainer(lib.Const.Const):
         hists[3].append(hist.history['val_loss'][0])
         return hists
 
+
     def save_data(self, strs, fname):
         with open("./fig/"+fname, "w") as file:
             file.writelines(str(strs))
+
 
     def plot(self, hists, save_name):
         labels = ["acc", "val_acc", "loss", "val_loss"]
@@ -122,7 +126,6 @@ class Trainer(lib.Const.Const):
         plt.clf() #一度消去
         plt.cla() #一度消去
 
-
         plt.figure(2)
         for i in range(2,4):
             t = range(len(hists[i]))
@@ -135,6 +138,7 @@ class Trainer(lib.Const.Const):
         plt.savefig("./fig/graph_loss_"+save_name+".png")
         print("save " + save_name + " glaph")
         plt.close()
+
 
 def get_word_lists(file_path):
     print("make wordlists")
@@ -190,7 +194,14 @@ def make_sentens_main(tr):
     
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
-        sentens_arr_vec, _, _ = ds.make_data(word_lists, tr.batch_size, chose_bucket)
+        sentens_arr_vec, _, _ = ds.make_data(word_lists, 1, chose_bucket)
+
+        train, teach, target  = ds.make_data(word_lists, tr.batch_size, chose_bucket)
+
+        ev = tr.model.sequence_autoencoder.evaluate([train, teach], target, batch_size = tr.batch_size, verbose=1)
+        print(ev)
+        exit(0)
+
         __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
         print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
 
