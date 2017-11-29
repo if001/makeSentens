@@ -140,6 +140,14 @@ class Trainer(lib.Const.Const):
         plt.close()
 
 
+    def load_test(self, word_lists, ds):
+        for value in self.buckets:
+            __train, __teach, __target  = ds.make_data(word_lists, self.batch_size, value)
+            __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
+            print(value, " : ", __ev)
+        exit(0)
+
+        
 def get_word_lists(file_path):
     print("make wordlists")
     lines = open(file_path).read().split("。")
@@ -191,16 +199,11 @@ def make_sentens_main(tr):
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
     tr.fact_decode_net()
+    tr.load_test(word_lists, ds)
     
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
         sentens_arr_vec, _, _ = ds.make_data(word_lists, 1, chose_bucket)
-
-        train, teach, target  = ds.make_data(word_lists, tr.batch_size, chose_bucket)
-
-        ev = tr.model.sequence_autoencoder.evaluate([train, teach], target, batch_size = tr.batch_size, verbose=1)
-        print(ev)
-        exit(0)
 
         __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
         print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
