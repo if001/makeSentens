@@ -67,6 +67,13 @@ class Trainer(lib.Const.Const):
         self.model.model_complie()
 
 
+    def fact_decode_net(self):
+        self.model = nn.Seq2SeqOfficial.Seq2Seq()
+        self.model.make_net()
+        self.model.waitController('load', 'param_seq2seq.hdf5')
+        self.model.make_decode_net()
+
+
     def select_random_bucket(self):
         rnd = random.randint(0, len(self.buckets)-1)
         return self.buckets[rnd]
@@ -179,10 +186,8 @@ def make_sentens_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
-    tr.fact_seq2seq()
-    tr.model.waitController('load', 'param_seq2seq.hdf5')
-    tr.model.make_decode_net()
-
+    tr.fact_decode_net()
+    
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
         sentens_arr_vec, _, _ = ds.make_data(word_lists, tr.batch_size, chose_bucket)

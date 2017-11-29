@@ -26,7 +26,6 @@ class DataShaping():
 
     def train_data_shaping(self, train_sentens_vec_batch, train_sentens, seq_num):
         if "BOS" in train_sentens: train_sentens.remove("BOS")
-        sentens_index = self.select_bucket(train_sentens,0)
         train_sentens = self.str_op.EOF_padding(train_sentens, seq_num)
         train_sentens = train_sentens[::-1]
         train_sentens_vec = self.str_op.sentens_array_to_vec(train_sentens)
@@ -35,7 +34,6 @@ class DataShaping():
 
 
     def teach_data_shaping(self, teach_sentens_vec_batch, teach_sentens, seq_num):
-        teach_index = self.select_bucket(teach_sentens,1)
         teach_sentens = self.str_op.EOF_padding(teach_sentens, seq_num)
         teach_sentens_vec = self.str_op.sentens_array_to_vec(teach_sentens)
         teach_sentens_vec_batch.append(teach_sentens_vec)
@@ -44,7 +42,6 @@ class DataShaping():
 
     def teach_target_data_shaping(self, teach_target_sentens_vec_batch, teach_sentens, seq_num):
         if "BOS" in teach_sentens: teach_sentens.remove("BOS")
-        teach_index = self.select_bucket(teach_sentens,1)
         teach_target_sentens = self.str_op.EOF_padding(teach_sentens, seq_num)
         teach_target_sentens_vec = self.str_op.sentens_array_to_vec(teach_target_sentens)
         teach_target_sentens_vec_batch.append(teach_target_sentens_vec)

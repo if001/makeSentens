@@ -18,7 +18,6 @@ class Const():
         # self.buckets = [(5, 10),(10,15)]
         # self.buckets = [(40,50)]
         self.buckets = [(5, 10), (10, 15), (20, 25), (40, 40)]
-        self.buckets = [(5, 10), (10, 15)]
 
         """ directory setting"""
         self.project_dir = lib.SetProject.get_path()
