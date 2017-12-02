@@ -22,7 +22,6 @@ class File():
             for file in files:
                 if (".txt" in file) and ("re_" in file):
                     self.filelist.append(file)
-
         except :
             print("reshape_text error occard" + file)
             sys.exit(0)
@@ -56,13 +55,19 @@ class File():
         if (("［ ＃］" in line ) == True): flag += 1
         if ("底本" in line) == True: flag += 1
         # 改行のみも除く
+        if (("   \n" == line ) == True): flag += 1
+        if (("  \n" == line ) == True): flag += 1
         if ((" \n" == line ) == True): flag += 1
         if (("\n" == line ) == True): flag += 1
+        if ((" 。 " == line ) == True): flag += 1
 
         # その他
+        if (("※" in line ) == True): flag += 1
+        if ((" ＊ " in line ) == True): flag += 1
         if (("＊" in line ) == True): flag += 1
         if (("http:" in line ) == True): flag += 1
         if (("青空文庫" in line ) == True): flag += 1
+        if (("入力 、 校正 、 制作" in line ) ): flag += 1
         if (("入力 ：" in line ) ): flag += 1
         if (("校正 ：" in line ) ): flag += 1
         if (("公開" in line ) and ("年" in line ) and ("月" in line) ): flag += 1
@@ -82,7 +87,7 @@ class File():
         return line
 
 
-    def delword(self,line):
+    def del_word(self,line):
         line = re.sub(r'\n', "", line)
         line = re.sub(r'「', "", line)
         line = re.sub(r'」', "", line)
@@ -93,52 +98,59 @@ class File():
 
 
     def add_token(self,line):
-        line = re.sub(r'。', "。 BOS", line)
+        # line = re.sub(r'。', "。 BOS", line)
+        line = "BOS" + line
+        return line
+
+
+    def add_end(self,line):
+        line += "。"
         return line
 
 
     def readfile(self,fname):
         project_dir = os.path.dirname(os.path.abspath(__file__))
         self.getlines = []
+
         with open(project_dir + '/' + fname,'r') as file:
             print("open "+fname)
-            line = file.readline()
-            while line:
-                line = file.readline()
-                if (self.checkline(line) == 0) :
+            lines = file.read()
+            lines = lines.split("。")
+            for line in lines:
+                if (self.checkline(line) == 0):
                     line = self.rm_between(line)
-                    line = self.delword(line)
+                    line = self.del_word(line)
                     line = self.add_token(line)
+                    line = self.add_end(line)
                     self.getlines.append(line)
 
 
-    def writefile(self,fname):
+    def writefile(self, fname):
         project_dir = os.path.dirname(os.path.abspath(__file__))
         save_dir = "/"
         fname = "re_"+fname
-        with open(project_dir + save_dir + fname,'w') as file:
-            print("save "+ project_dir+save_dir+fname)
+
+        with open(project_dir + save_dir + fname, 'w') as file:
+            print("save " + project_dir+save_dir+fname)
             for line in self.getlines:
-                file.writelines(line)
+                file.write(line+"\n")
 
 
 def test():
-    f = File()
-    st="ところが 、 その 予想 が がらっと 外れ 、 意外 や 、 題 を 聴け ば 「 水棲 人 」 。 私 も 、 ちょっと 暫 《 しば ら 》 く は 聴き ちがい で は ない か と 思っ た ほど だ 。 "
-    st = f.rm_between(st)
-    #st = re.sub(r'.《.+?.》', "", st)
-    print(st)
-    # new_st = st.replace('《*》','')
-    # print(new_st)
+    myfile = File()
+    fname = "re_oshieto_tabisuru_otoko.txt"
+    myfile.readfile(fname)
+    myfile.writefile(fname)
+
 
 def main():
     myfile = File()
     myfile.get_files_indir()
 
-    for fname in myfile.filelist :
+    for fname in myfile.filelist:
         myfile.readfile(fname)
         myfile.writefile(fname)
 
 if __name__ == "__main__" :
-    #test()
+    # test()
     main()

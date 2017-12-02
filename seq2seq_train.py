@@ -171,7 +171,8 @@ class Trainer(lib.Const.Const):
 
 def get_word_lists(file_path):
     print("make wordlists")
-    lines = open(file_path).read().split("。")
+    # lines = open(file_path).read().split("。")
+    lines = open(file_path).read().split("\n")
     wordlists = []
     for line in lines:
         wordlists.append(line.split(" "))
@@ -181,8 +182,8 @@ def get_word_lists(file_path):
 
 
 def train_main(tr):
-    tr.init_word2vec("load")
-    #tr.init_word2vec("learn")
+    # tr.init_word2vec("load")
+    tr.init_word2vec("learn")
 
     tr.fact_seq2seq()
 
