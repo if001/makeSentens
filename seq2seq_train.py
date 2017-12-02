@@ -52,6 +52,7 @@ class Trainer(lib.Const.Const):
 
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
+
         if flag == "learn":
             self.word2vec.train(self.word2vec_train_file)
         elif flag == "load":
@@ -71,9 +72,10 @@ class Trainer(lib.Const.Const):
         self.model = nn.Seq2SeqOfficial.Seq2Seq()
         self.model.make_net()
         self.model.model_complie()
-        self.model.waitController('load', 'param_seq2seq.hdf5')
         self.model.make_decode_net()
-        
+        self.model.waitController('load', 'param_seq2seq.hdf5')
+
+
 
     def select_random_bucket(self):
         rnd = random.randint(0, len(self.buckets)-1)
@@ -143,11 +145,30 @@ class Trainer(lib.Const.Const):
     def load_test(self, word_lists, ds):
         for value in self.buckets:
             __train, __teach, __target  = ds.make_data(word_lists, self.batch_size, value)
+            so = lib.StringOperation.StringOperation()
             __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
             print(value, " : ", __ev)
-        exit(0)
 
-        
+
+    def load_test2(self, test_data, ds):
+        __train, __teach, __target  = test_data
+
+        so = lib.StringOperation.StringOperation()
+
+        for value1 in __train :
+            print(so.sentens_vec_to_sentens_arr(value1))
+        print("---")
+        for value2 in __teach :
+            print(so.sentens_vec_to_sentens_arr(value2))
+        print("---")
+        for value3 in __target :
+            print(so.sentens_vec_to_sentens_arr(value3))
+        print("---")
+
+        __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
+        print("test2 : ",__ev)
+
+
 def get_word_lists(file_path):
     print("make wordlists")
     lines = open(file_path).read().split("。")
@@ -160,35 +181,38 @@ def get_word_lists(file_path):
 
 
 def train_main(tr):
-    if '--resume' in sys.argv:
-        tr.init_word2vec("load")
-    else:
-        tr.init_word2vec("learn")
+    tr.init_word2vec("load")
+    #tr.init_word2vec("learn")
+
+    tr.fact_seq2seq()
 
     ds = lib.DataShaping.DataShaping()
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
-    tr.fact_seq2seq()
 
-    while(True):
-        if '--resume' in sys.argv:
-            print('resume param_seq2seq.hdf5')
-            tr.model.waitController('load', 'param_seq2seq.hdf5')
+    if '--resume' in sys.argv:
+        print('resume param_seq2seq.hdf5')
+        tr.model.waitController('load', 'param_seq2seq.hdf5')
 
+
+    for step in range(lib.Const.Const().learning_num):
         chose_bucket = tr.select_random_bucket()
         print("chose bucket", chose_bucket)
         train_data, teach_data, teach_target_data = ds.make_data(word_lists, tr.batch_size, chose_bucket)
 
-        print("learninig start")
-        for step in range(lib.Const.Const().learning_num):
-            print("train step : ", step)
-            hist = tr.model.train(train_data, teach_data, teach_target_data)
-            tr.hists = tr.append_hist(hist, tr.hists)
+        print("train step : ", step)
+        hist = tr.model.train(train_data, teach_data, teach_target_data)
+        tr.hists = tr.append_hist(hist, tr.hists)
 
-            if (step % tr.check_point == 0) and (step != 0):
-                # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
-                tr.model.waitController('save','param_seq2seq.hdf5')
+        if (step % tr.check_point == 0) and (step != 0):
+            # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
+            tr.model.waitController('save','param_seq2seq.hdf5')
+            tr.load_test(word_lists, ds)
+
+
+    tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
+    tr.load_test2(tr.test_data, ds)
 
 
 def make_sentens_main(tr):
@@ -198,9 +222,18 @@ def make_sentens_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
-    tr.fact_decode_net()
+    print("tes")
+    tr.model = nn.Seq2SeqOfficial.Seq2Seq()
+    tr.model.make_net()
+    tr.model.waitController('load', 'param_seq2seq.hdf5')
+    tr.model.model_complie()
+
     tr.load_test(word_lists, ds)
-    
+    tr.load_test2(tr.test_data, ds)
+    exit(0)
+    # tr.model.make_decode_net()
+
+
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
         sentens_arr_vec, _, _ = ds.make_data(word_lists, 1, chose_bucket)
@@ -226,6 +259,8 @@ def make_sentens_main(tr):
 
 def main():
     tr = Trainer()
+    train_main(tr)
+    make_sentens_main(tr)
 
     if '--train' in sys.argv:
         train_main(tr)

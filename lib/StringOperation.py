@@ -4,13 +4,15 @@ class StringOperation(lib.Const.Const):
     def __init__(self,flag="load"):
         super().__init__()
         self.word2vec = lib.WordVec.MyWord2Vec()
-        if flag == "learn":
-            self.word2vec.train(self.dict_train_file)
-        elif flag == "load":
-            self.word2vec.load_model()
-        else:
-            print("not set word2vec model")
-            exit(0)
+        self.word2vec.load_model()
+
+        # if flag == "learn":
+        #     self.word2vec.train(self.dict_train_file)
+        # elif flag == "load":
+        #     self.word2vec.load_model()
+        # else:
+        #     print("not set word2vec model")
+        #     exit(0)
 
 
     def sentens_array_to_str(self,sentens_array):
