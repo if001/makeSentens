@@ -24,6 +24,7 @@ class DataShaping():
                 index = __buckets.index(__buckets[i+1])
         return index
 
+
     def train_data_shaping(self, train_sentens_vec_batch, train_sentens, seq_num):
         if "BOS" in train_sentens: train_sentens.remove("BOS")
         train_sentens = self.str_op.EOF_padding(train_sentens, seq_num)
@@ -54,12 +55,15 @@ class DataShaping():
         teach_target_sentens_vec_batch = []
 
         for j in range(batch_size):
+            __word_lists = word_lists[::]
             while(True):
-                train_sentens = self.select_random_sentens(word_lists)
+                train_sentens = self.select_random_sentens(__word_lists)
                 train_sentens = self.str_op.reshape_sentens(train_sentens)
-                teach_sentens = word_lists[word_lists.index(train_sentens)+1]
+                teach_sentens = word_lists[__word_lists.index(train_sentens)+1]
                 teach_sentens = self.str_op.reshape_sentens(teach_sentens)
+                teach_sentens = self.str_op.teach_reshape_sentens(teach_sentens)
                 bucket_index = lib.Const.Const().buckets.index(chose_bucket)
+                # if(bucket_index == 0): print(__word_lists.index(train_sentens)+1)
                 if((self.select_bucket(train_sentens,0) <= bucket_index) and (self.select_bucket(teach_sentens,1) == bucket_index) ): break
 
             train_sentens_vec_batch = self.train_data_shaping(train_sentens_vec_batch, train_sentens, chose_bucket[0])

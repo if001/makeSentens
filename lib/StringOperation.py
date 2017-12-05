@@ -64,8 +64,13 @@ class StringOperation(lib.Const.Const):
         return sentens_vec
 
 
-    def reshape_sentens(self,sentens):
+    def reshape_sentens(self, sentens):
         if ('「' in sentens): sentens.remove('「')
         if ('」' in sentens): sentens.remove('」')
         while '' in sentens: sentens.remove('')
+        return sentens
+
+
+    def teach_reshape_sentens(self, sentens):
+        if ('BOS' not in sentens): sentens.insert(0, 'BOS')
         return sentens

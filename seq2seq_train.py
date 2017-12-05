@@ -76,7 +76,6 @@ class Trainer(lib.Const.Const):
         self.model.waitController('load', 'param_seq2seq.hdf5')
 
 
-
     def select_random_bucket(self):
         rnd = random.randint(0, len(self.buckets)-1)
         return self.buckets[rnd]
@@ -155,15 +154,15 @@ class Trainer(lib.Const.Const):
 
         so = lib.StringOperation.StringOperation()
 
-        for value1 in __train :
-            print(so.sentens_vec_to_sentens_arr(value1))
-        print("---")
-        for value2 in __teach :
-            print(so.sentens_vec_to_sentens_arr(value2))
-        print("---")
-        for value3 in __target :
-            print(so.sentens_vec_to_sentens_arr(value3))
-        print("---")
+        # for value1 in __train :
+        #     print(so.sentens_vec_to_sentens_arr(value1))
+        # print("---")
+        # for value2 in __teach :
+        #     print(so.sentens_vec_to_sentens_arr(value2))
+        # print("---")
+        # for value3 in __target :
+        #     print(so.sentens_vec_to_sentens_arr(value3))
+        # print("---")
 
         __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
         print("test2 : ",__ev)
@@ -182,8 +181,8 @@ def get_word_lists(file_path):
 
 
 def train_main(tr):
-    # tr.init_word2vec("load")
-    tr.init_word2vec("learn")
+    tr.init_word2vec("load")
+    # tr.init_word2vec("learn")
 
     tr.fact_seq2seq()
 
@@ -191,11 +190,9 @@ def train_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
-
     if '--resume' in sys.argv:
         print('resume param_seq2seq.hdf5')
         tr.model.waitController('load', 'param_seq2seq.hdf5')
-
 
     for step in range(lib.Const.Const().learning_num):
         chose_bucket = tr.select_random_bucket()
@@ -211,29 +208,23 @@ def train_main(tr):
             tr.model.waitController('save','param_seq2seq.hdf5')
             tr.load_test(word_lists, ds)
 
-
-    tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
-    tr.load_test2(tr.test_data, ds)
+    # tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
+    # tr.load_test2(tr.test_data, ds)
+    # print("train w:",tr.model.sequence_autoencoder.layers[4].get_weights())
+    # print("")
 
 
 def make_sentens_main(tr):
     tr.init_word2vec("load")
+    word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
+    tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
 
-    word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
+    tr.fact_seq2seq()
 
-    print("tes")
-    tr.model = nn.Seq2SeqOfficial.Seq2Seq()
-    tr.model.make_net()
     tr.model.waitController('load', 'param_seq2seq.hdf5')
-    tr.model.model_complie()
-
-    tr.load_test(word_lists, ds)
-    tr.load_test2(tr.test_data, ds)
-    exit(0)
-    # tr.model.make_decode_net()
-
+    tr.model.make_decode_net()
 
     for i in range(10):
         chose_bucket = tr.select_random_bucket()
@@ -260,8 +251,8 @@ def make_sentens_main(tr):
 
 def main():
     tr = Trainer()
-    train_main(tr)
-    make_sentens_main(tr)
+    #train_main(tr)
+    #make_sentens_main(tr)
 
     if '--train' in sys.argv:
         train_main(tr)

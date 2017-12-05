@@ -1,5 +1,5 @@
 import numpy as np
-#import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 from keras.models import Model
 
 from keras.layers import Input, LSTM, RepeatVector
@@ -44,17 +44,17 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-        self.encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(self.encoder_inputs)
-        self.encoder_states = [state_h, state_c]
+        encoder_inputs = Input(shape=(None, input_dim))
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(encoder_inputs)
+        encoder_states = [state_h, state_c]
 
-        self.decoder_inputs = Input(shape=(None, input_dim))
-        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
-        decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
-        self.decoder_dense = Dense(output_dim, activation='linear')
-        decoder_outputs = self.decoder_dense(decoder_outputs)
+        decoder_inputs = Input(shape=(None, input_dim))
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+        decoder_dense = Dense(output_dim, activation='linear')
+        decoder_outputs = decoder_dense(decoder_outputs)
 
-        self.sequence_autoencoder = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs)
+        self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
         # return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
 
@@ -62,19 +62,48 @@ class Seq2Seq(lib.Const.Const):
     def make_decode_net(self):
         """ for decoding net """
 
-        self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
+        input_dim = self.word_feat_len
+        output_dim = self.word_feat_len
+
+        _, _, encoder_lstm_l, decoder_lstm_l, decoder_dense_l = self.sequence_autoencoder.layers
+
+        encoder_inputs = Input(shape=(None, input_dim))
+        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=encoder_lstm_l.get_weights())(encoder_inputs)
+        encoder_states = [state_h, state_c]
+        self.encoder_model = Model(encoder_inputs, encoder_states)
 
         decoder_state_input_h = Input(shape=(self.latent_dim,))
         decoder_state_input_c = Input(shape=(self.latent_dim,))
         decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-        decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
+
+        decoder_inputs = Input(shape=(None, input_dim))
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, weights=decoder_lstm_l.get_weights())
+        decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
 
         decoder_states = [state_h, state_c]
-        decoder_outputs = self.decoder_dense(decoder_outputs)
+        decoder_dense = Dense(output_dim, activation='linear', weights=decoder_dense_l.get_weights())
+        decoder_outputs = decoder_dense(decoder_outputs)
         self.decoder_model = Model(
-            [self.decoder_inputs] + decoder_states_inputs,
+            [decoder_inputs] + decoder_states_inputs,
             [decoder_outputs] + decoder_states)
-        # return encoder_model, decoder_model
+
+
+    # def make_decode_net(self):
+    #     """ for decoding net """
+
+    #     self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
+
+    #     decoder_state_input_h = Input(shape=(self.latent_dim,))
+    #     decoder_state_input_c = Input(shape=(self.latent_dim,))
+    #     decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+    #     decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
+
+    #     decoder_states = [state_h, state_c]
+    #     decoder_outputs = self.decoder_dense(decoder_outputs)
+    #     self.decoder_model = Model(
+    #         [self.decoder_inputs] + decoder_states_inputs,
+    #         [decoder_outputs] + decoder_states)
+    #     # return encoder_model, decoder_model
 
 
     def model_complie(self):
@@ -116,15 +145,38 @@ class Seq2Seq(lib.Const.Const):
         return sentens_vec
 
 
+    def waitController_encorder(self, flag, fname):
+        if flag == "save":
+            print("save"+self.seq2seq_wait_save_dir+fname)
+            self.encoder_model.save(self.seq2seq_wait_save_dir+fname)
+        if flag == "load":
+            from keras.models import load_model
+            print("load"+self.seq2seq_wait_save_dir+fname)
+            self.encoder_model = load_model(self.seq2seq_wait_save_dir+fname)
+
+
+    def waitController_decorder(self, flag, fname):
+        if flag == "save":
+            print("save"+self.seq2seq_wait_save_dir+fname)
+            self.decoder_model.save(self.seq2seq_wait_save_dir+fname)
+        if flag == "load":
+            from keras.models import load_model
+            print("load"+self.seq2seq_wait_save_dir+fname)
+            self.decoder_model = load_model(self.seq2seq_wait_save_dir+fname)
+
+
     def waitController(self,flag,fname):
         if flag == "save":
             print("save"+self.seq2seq_wait_save_dir+fname)
-            self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
+            # self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
+            self.sequence_autoencoder.save(self.seq2seq_wait_save_dir+fname)
         if flag == "load":
             print("load"+self.seq2seq_wait_save_dir+fname)
-            self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
+            # self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
+            from keras.models import load_model
+            self.sequence_autoencoder = load_model(self.seq2seq_wait_save_dir+fname)
 
-
+            
 def main():
     seq2seq = Seq2Seq()
     seq2seq.make_net()
