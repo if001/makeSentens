@@ -65,12 +65,20 @@ class StringOperation(lib.Const.Const):
 
 
     def reshape_sentens(self, sentens):
-        if ('「' in sentens): sentens.remove('「')
-        if ('」' in sentens): sentens.remove('」')
-        while '' in sentens: sentens.remove('')
-        return sentens
+        __sentens = sentens[::]
+        if ('「' in __sentens): __sentens.remove('「')
+        if ('」' in __sentens): __sentens.remove('」')
+        while '' in __sentens: __sentens.remove('')
+        return __sentens
 
 
-    def teach_reshape_sentens(self, sentens):
-        if ('BOS' not in sentens): sentens.insert(0, 'BOS')
-        return sentens
+    def add_BOS(self, sentens):
+        __sentens = sentens
+        if ('BOS' not in __sentens): __sentens.insert(0, 'BOS')
+        return __sentens
+
+
+    def rm_BOS(self, sentens):
+        __sentens = sentens
+        if ('BOS' in __sentens): __sentens.remove('BOS')
+        return __sentens

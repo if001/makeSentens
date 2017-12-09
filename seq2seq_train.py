@@ -219,11 +219,12 @@ def make_sentens_main(tr):
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
-    tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
+
 
     tr.fact_seq2seq()
 
     tr.model.waitController('load', 'param_seq2seq.hdf5')
+    tr.load_test(word_lists, ds)
     tr.model.make_decode_net()
 
     for i in range(10):
@@ -251,8 +252,6 @@ def make_sentens_main(tr):
 
 def main():
     tr = Trainer()
-    #train_main(tr)
-    #make_sentens_main(tr)
 
     if '--train' in sys.argv:
         train_main(tr)

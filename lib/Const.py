@@ -16,7 +16,7 @@ class Const():
 
         self.learning_num = 600000
         # self.learning_num = 10
-        self.check_point = 500
+        self.check_point = 200
 
         self.buckets = [(5, 10), (10, 15), (20, 25), (40, 40)]
         # self.buckets = [(5, 10)]
