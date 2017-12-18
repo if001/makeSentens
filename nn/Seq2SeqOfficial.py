@@ -47,13 +47,13 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-        self.encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.0, recurrent_dropout=0.0)(self.encoder_inputs)
-        self.encoder_states = [state_h, state_c]
+        encoder_inputs = Input(shape=(None, input_dim))
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.0, recurrent_dropout=0.0)(encoder_inputs)
+        encoder_states = [state_h, state_c]
 
-        self.decoder_inputs = Input(shape=(None, input_dim))
-        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
+        decoder_inputs = Input(shape=(None, input_dim))
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
         # self.decoder_dense = Dense(output_dim, activation='linear')
         # decoder_outputs = self.decoder_dense(decoder_outputs)
 
@@ -78,7 +78,7 @@ class Seq2Seq(lib.Const.Const):
         encoder_inputs = Input(shape=(None, input_dim))
         _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=encoder_lstm_l.get_weights())(encoder_inputs)
         encoder_states = [state_h, state_c]
-        self.encoder_model = Model(encoder_inputs, encoder_states)
+        encoder_model = Model(encoder_inputs, encoder_states)
 
         decoder_state_input_h = Input(shape=(self.latent_dim,))
         decoder_state_input_c = Input(shape=(self.latent_dim,))
@@ -89,7 +89,7 @@ class Seq2Seq(lib.Const.Const):
         decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
 
         decoder_states = [state_h, state_c]
-        decoder_outputs = self.decoder_dense(decoder_outputs)
+        decoder_outputs = decoder_dense(decoder_outputs)
 
         self.decoder_model = Model(
             [self.decoder_inputs] + decoder_states_inputs,
