@@ -47,7 +47,6 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-<<<<<<< HEAD
         self.encoder_inputs = Input(shape=(None, input_dim))
         encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.0, recurrent_dropout=0.0)(self.encoder_inputs)
         self.encoder_states = [state_h, state_c]
@@ -62,17 +61,6 @@ class Seq2Seq(lib.Const.Const):
         decoder_outputs = Dropout(0.2)(decoder_outputs)
         decoder_outputs = BatchNormalization()(decoder_outputs)
         decoder_outputs = Dense(output_dim, activation='sigmoid')(decoder_outputs)
-=======
-        encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(encoder_inputs)
-        encoder_states = [state_h, state_c]
-
-        decoder_inputs = Input(shape=(None, input_dim))
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
-        decoder_dense = Dense(output_dim, activation='linear')
-        decoder_outputs = decoder_dense(decoder_outputs)
->>>>>>> ff0c79f39becd7f6956a8a0565b6cadaaaab968d
 
         self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
@@ -101,53 +89,12 @@ class Seq2Seq(lib.Const.Const):
         decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
 
         decoder_states = [state_h, state_c]
-<<<<<<< HEAD
         decoder_outputs = self.decoder_dense(decoder_outputs)
 
         self.decoder_model = Model(
             [self.decoder_inputs] + decoder_states_inputs,
             [decoder_outputs] + decoder_states)
         # return encoder_model, decoder_model
-
-
-    def make_decode_net2(self):
-        """ for decoding net """
-
-        self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
-
-        decoder_state_input_h = Input(shape=(self.latent_dim,))
-        decoder_state_input_c = Input(shape=(self.latent_dim,))
-        decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-        decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
-
-        decoder_states = [state_h, state_c]
-        decoder_outputs = self.decoder_dense(decoder_outputs)
-
-=======
-        decoder_dense = Dense(output_dim, activation='linear', weights=decoder_dense_l.get_weights())
-        decoder_outputs = decoder_dense(decoder_outputs)
->>>>>>> ff0c79f39becd7f6956a8a0565b6cadaaaab968d
-        self.decoder_model = Model(
-            [decoder_inputs] + decoder_states_inputs,
-            [decoder_outputs] + decoder_states)
-
-
-    # def make_decode_net(self):
-    #     """ for decoding net """
-
-    #     self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
-
-    #     decoder_state_input_h = Input(shape=(self.latent_dim,))
-    #     decoder_state_input_c = Input(shape=(self.latent_dim,))
-    #     decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-    #     decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
-
-    #     decoder_states = [state_h, state_c]
-    #     decoder_outputs = self.decoder_dense(decoder_outputs)
-    #     self.decoder_model = Model(
-    #         [self.decoder_inputs] + decoder_states_inputs,
-    #         [decoder_outputs] + decoder_states)
-    #     # return encoder_model, decoder_model
 
 
     def model_complie(self):
@@ -190,35 +137,6 @@ class Seq2Seq(lib.Const.Const):
         return sentens_vec
 
 
-    def waitController_encorder(self, flag, fname):
-        if flag == "save":
-            print("save"+self.seq2seq_wait_save_dir+fname)
-<<<<<<< HEAD
-            self.sequence_autoencoder.save(self.seq2seq_wait_save_dir+fname)
-            # self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
-=======
-            self.encoder_model.save(self.seq2seq_wait_save_dir+fname)
->>>>>>> ff0c79f39becd7f6956a8a0565b6cadaaaab968d
-        if flag == "load":
-            from keras.models import load_model
-            print("load"+self.seq2seq_wait_save_dir+fname)
-<<<<<<< HEAD
-            # self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
-            self.sequence_autoencoder.load(self.seq2seq_wait_save_dir+fname)
-=======
-            self.encoder_model = load_model(self.seq2seq_wait_save_dir+fname)
-
-
-    def waitController_decorder(self, flag, fname):
-        if flag == "save":
-            print("save"+self.seq2seq_wait_save_dir+fname)
-            self.decoder_model.save(self.seq2seq_wait_save_dir+fname)
-        if flag == "load":
-            from keras.models import load_model
-            print("load"+self.seq2seq_wait_save_dir+fname)
-            self.decoder_model = load_model(self.seq2seq_wait_save_dir+fname)
-
-
     def waitController(self,flag,fname):
         if flag == "save":
             print("save"+self.seq2seq_wait_save_dir+fname)
@@ -229,9 +147,8 @@ class Seq2Seq(lib.Const.Const):
             # self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
             from keras.models import load_model
             self.sequence_autoencoder = load_model(self.seq2seq_wait_save_dir+fname)
->>>>>>> ff0c79f39becd7f6956a8a0565b6cadaaaab968d
 
-            
+
 def main():
     seq2seq = Seq2Seq()
     seq2seq.make_net()
