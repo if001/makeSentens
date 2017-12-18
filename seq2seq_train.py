@@ -76,7 +76,6 @@ class Trainer(lib.Const.Const):
         self.model.waitController('load', 'param_seq2seq.hdf5')
 
 
-
     def select_random_bucket(self):
         rnd = random.randint(0, len(self.buckets)-1)
         return self.buckets[rnd]
@@ -182,8 +181,8 @@ def get_word_lists(file_path):
 
 
 def train_main(tr):
-    # tr.init_word2vec("load")
-    tr.init_word2vec("learn")
+    tr.init_word2vec("load")
+    # tr.init_word2vec("learn")
 
     tr.fact_seq2seq()
 
@@ -191,11 +190,9 @@ def train_main(tr):
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
-
     if '--resume' in sys.argv:
         print('resume param_seq2seq.hdf5')
         tr.model.waitController('load', 'param_seq2seq.hdf5')
-
 
     for step in range(lib.Const.Const().learning_num):
         chose_bucket = tr.select_random_bucket()
@@ -208,7 +205,7 @@ def train_main(tr):
 
         if (step % tr.check_point == 0) and (step != 0):
             # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
-            tr.model.waitController('save','param_seq2seq.hdf5')
+            tr.model.waitController('save', 'param_seq2seq.hdf5')
             tr.load_test(word_lists, ds)
 
 

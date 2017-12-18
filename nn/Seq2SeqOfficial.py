@@ -8,6 +8,8 @@ from keras.models import Sequential
 
 from keras.layers.wrappers import Bidirectional as Bi
 from keras.layers.wrappers import TimeDistributed as TD
+from keras.layers.embeddings import Embedding
+from keras.layers.normalization import BatchNormalization
 from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate, Dropout, Bidirectional
 from keras.models          import Model
 from keras.layers.core     import Flatten
@@ -33,7 +35,8 @@ class Seq2Seq(lib.Const.Const):
         super().__init__()
         self.input_word_num = 1
         self.latent_dim = 512
-
+        self.latent_dim2 = 1024
+        self.latent_dim3 = 512
 
     def make_net(self):
         """ make net by reference to Keras official doc """
@@ -45,14 +48,19 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         self.encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(self.encoder_inputs)
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.0, recurrent_dropout=0.0)(self.encoder_inputs)
         self.encoder_states = [state_h, state_c]
 
         self.decoder_inputs = Input(shape=(None, input_dim))
-        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        self.decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
         decoder_outputs, _, _ = self.decoder_lstm(self.decoder_inputs, initial_state=self.encoder_states)
-        self.decoder_dense = Dense(output_dim, activation='linear')
-        decoder_outputs = self.decoder_dense(decoder_outputs)
+        # self.decoder_dense = Dense(output_dim, activation='linear')
+        # decoder_outputs = self.decoder_dense(decoder_outputs)
+
+        decoder_outputs = Dense(self.latent_dim2, activation='relu')(decoder_outputs)
+        decoder_outputs = Dropout(0.2)(decoder_outputs)
+        decoder_outputs = BatchNormalization()(decoder_outputs)
+        decoder_outputs = Dense(output_dim, activation='sigmoid')(decoder_outputs)
 
         self.sequence_autoencoder = Model([self.encoder_inputs, self.decoder_inputs], decoder_outputs)
 
@@ -71,6 +79,26 @@ class Seq2Seq(lib.Const.Const):
 
         decoder_states = [state_h, state_c]
         decoder_outputs = self.decoder_dense(decoder_outputs)
+
+        self.decoder_model = Model(
+            [self.decoder_inputs] + decoder_states_inputs,
+            [decoder_outputs] + decoder_states)
+        # return encoder_model, decoder_model
+
+
+    def make_decode_net2(self):
+        """ for decoding net """
+
+        self.encoder_model = Model(self.encoder_inputs, self.encoder_states)
+
+        decoder_state_input_h = Input(shape=(self.latent_dim,))
+        decoder_state_input_c = Input(shape=(self.latent_dim,))
+        decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+        decoder_outputs, state_h, state_c = self.decoder_lstm(self.decoder_inputs, initial_state=decoder_states_inputs)
+
+        decoder_states = [state_h, state_c]
+        decoder_outputs = self.decoder_dense(decoder_outputs)
+
         self.decoder_model = Model(
             [self.decoder_inputs] + decoder_states_inputs,
             [decoder_outputs] + decoder_states)
@@ -84,6 +112,7 @@ class Seq2Seq(lib.Const.Const):
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
         loss = 'mean_squared_error'
+        loss = 'binary_crossentropy'
         self.sequence_autoencoder.compile(optimizer=optimizer,
                                           loss=loss,
                                           metrics=['accuracy'])
@@ -119,11 +148,12 @@ class Seq2Seq(lib.Const.Const):
     def waitController(self,flag,fname):
         if flag == "save":
             print("save"+self.seq2seq_wait_save_dir+fname)
-            self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
+            self.sequence_autoencoder.save(self.seq2seq_wait_save_dir+fname)
+            # self.sequence_autoencoder.save_weights(self.seq2seq_wait_save_dir+fname)
         if flag == "load":
             print("load"+self.seq2seq_wait_save_dir+fname)
-            self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
-
+            # self.sequence_autoencoder.load_weights(self.seq2seq_wait_save_dir+fname)
+            self.sequence_autoencoder.load(self.seq2seq_wait_save_dir+fname)
 
 def main():
     seq2seq = Seq2Seq()
