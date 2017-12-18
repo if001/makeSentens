@@ -1,8 +1,8 @@
 """
-The purpose of this program is getting aozora_bunko novels.
+This program get aozora_bunko novels.
 To do it, you set author_id as option.
 
-example, you play,
+example,
 $ python3 get_aozora.py -id <author_id>
 
 """
@@ -20,12 +20,14 @@ def get_body(url):
         print(" ----- html error cood",url)
         return ""
 
+
 def get_cards(body):
     __cards = []
     for value in body.split("\n"):
         if ('<li>' in value) and ('.html' in value) :
             __cards.append(value.split('"')[1].split('/')[-1].split(".")[0].replace("card",""))
     return __cards
+
 
 def get_zip_code(body,cardId):
     zipcode = []
@@ -39,6 +41,7 @@ def get_zip_code(body,cardId):
 def get_novel_body(authorId,cardId):
     url = "http://www.aozora.gr.jp/cards/"+ authorId + "/card" + cardId + ".html"
     return get_body(url)
+
 
 def zero_padding(authorId):
     # authorIDが6けたなので足りないぶんを0で埋める
@@ -65,11 +68,6 @@ def get_path():
 
 
 def main():
-    """
-    author_id is set in a format excluding a zero.
-    for example, author_id of 芥川 竜之介 is 832
-    """
-    
     if ("-id" in sys.argv) and (len(sys.argv) == 3 ):
         authorId = sys.argv[2]
     else :

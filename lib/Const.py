@@ -13,13 +13,13 @@ class Const():
 
         self.batch_size = 32 # (5,10)のときちょうど良い,64でもわりと頑張る
         self.batch_size = 64
-        self.batch_size = 10
+
         self.learning_num = 600000
-        self.learning_num = 100
-        self.check_point = 30
+        # self.learning_num = 10
+        self.check_point = 200
 
         self.buckets = [(5, 10), (10, 15), (20, 25), (40, 40)]
-        self.buckets = [(5, 10)]
+        # self.buckets = [(5, 10)]
 
         """ directory setting"""
         self.project_dir = lib.SetProject.get_path()
