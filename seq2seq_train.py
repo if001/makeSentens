@@ -149,25 +149,6 @@ class Trainer(lib.Const.Const):
             print(value, " : ", __ev)
 
 
-    def load_test2(self, test_data, ds):
-        __train, __teach, __target  = test_data
-
-        so = lib.StringOperation.StringOperation()
-
-        # for value1 in __train :
-        #     print(so.sentens_vec_to_sentens_arr(value1))
-        # print("---")
-        # for value2 in __teach :
-        #     print(so.sentens_vec_to_sentens_arr(value2))
-        # print("---")
-        # for value3 in __target :
-        #     print(so.sentens_vec_to_sentens_arr(value3))
-        # print("---")
-
-        __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
-        print("test2 : ",__ev)
-
-
 def get_word_lists(file_path):
     print("make wordlists")
     # lines = open(file_path).read().split("。")
@@ -207,11 +188,6 @@ def train_main(tr):
             # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
             tr.model.waitController('save', 'param_seq2seq.hdf5')
             tr.load_test(word_lists, ds)
-
-    # tr.test_data = ds.make_data(word_lists, tr.batch_size, tr.buckets[0])
-    # tr.load_test2(tr.test_data, ds)
-    # print("train w:",tr.model.sequence_autoencoder.layers[4].get_weights())
-    # print("")
 
 
 def make_sentens_main(tr):

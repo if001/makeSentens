@@ -27,14 +27,6 @@ class StringOperation(lib.Const.Const):
         __sentens_vec = []
         for value in sentens_arr:
             __vec = self.word2vec.get_vector2(value)
-            # try:
-            #     __vec = self.word2vec.get_vector(value)
-            # except ValueError:
-            #     print("value error",value)
-            #     __vec = self.word2vec.get_similar_vector(value)
-            # except KeyError:
-            #     print("key error",value)
-            #     __vec = self.word2vec.get_similar_vector(value)
             __sentens_vec.append(__vec)
         return __sentens_vec
 

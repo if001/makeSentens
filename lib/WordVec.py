@@ -19,7 +19,7 @@ class MyWord2Vec(lib.Const.Const):
     def train(self,fname,saveflag="save"):
         sentences = gensim.models.word2vec.Text8Corpus(fname)
         #model = gensim.models.word2vec.Word2Vec(sentences, size=200, window=5, workers=4, min_count=5)
-        self.model = gensim.models.word2vec.Word2Vec(sentences, size=self.word_feat_len, window=5, workers=4, min_count=1)
+        self.model = gensim.models.word2vec.Word2Vec(sentences, size=self.word_feat_len, window=5, workers=4, min_count=1, hs=1)
         if saveflag == "save":
             print("save "+self.word2vec_wait)
             self.model.save(self.word2vec_wait)

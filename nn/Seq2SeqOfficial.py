@@ -38,6 +38,7 @@ class Seq2Seq(lib.Const.Const):
         self.latent_dim2 = 1024
         self.latent_dim3 = 512
 
+
     def make_net(self):
         """ make net by reference to Keras official doc """
         # # テスト用ぱらめた
@@ -48,7 +49,7 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.0, recurrent_dropout=0.0)(encoder_inputs)
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_inputs)
         encoder_states = [state_h, state_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
@@ -58,8 +59,6 @@ class Seq2Seq(lib.Const.Const):
         # decoder_outputs = self.decoder_dense(decoder_outputs)
 
         decoder_outputs = Dense(self.latent_dim2, activation='relu')(decoder_outputs)
-        decoder_outputs = Dropout(0.2)(decoder_outputs)
-        decoder_outputs = BatchNormalization()(decoder_outputs)
         decoder_outputs = Dense(output_dim, activation='sigmoid')(decoder_outputs)
 
         self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
@@ -94,7 +93,7 @@ class Seq2Seq(lib.Const.Const):
         self.decoder_model = Model(
             [self.decoder_inputs] + decoder_states_inputs,
             [decoder_outputs] + decoder_states)
-        # return encoder_model, decoder_model
+
 
 
     def model_complie(self):
@@ -103,8 +102,8 @@ class Seq2Seq(lib.Const.Const):
         #optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
-        loss = 'mean_squared_error'
-        loss = 'binary_crossentropy'
+        Loss = 'mean_squared_error'
+        # loss = 'kullback_leibler_divergence'
         self.sequence_autoencoder.compile(optimizer=optimizer,
                                           loss=loss,
                                           metrics=['accuracy'])
