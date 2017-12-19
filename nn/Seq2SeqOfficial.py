@@ -49,17 +49,15 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_inputs)
+        encoder_inputs2 = Dense(output_dim, activation='sigmoid')(encoder_inputs)
+        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_inputs2)
         encoder_states = [state_h, state_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
         decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
-        # self.decoder_dense = Dense(output_dim, activation='linear')
-        # decoder_outputs = self.decoder_dense(decoder_outputs)
-
-        decoder_outputs = Dense(self.latent_dim2, activation='relu')(decoder_outputs)
-        decoder_outputs = Dense(output_dim, activation='sigmoid')(decoder_outputs)
+        self.decoder_dense = Dense(output_dim, activation='linear')
+        decoder_outputs = self.decoder_dense(decoder_outputs)
 
         self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
@@ -102,7 +100,7 @@ class Seq2Seq(lib.Const.Const):
         #optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
         #optimizer = SGD(decay=1e-6, momentum=0.9, nesterov=True)
         # optimizer = 'Adam'
-        Loss = 'mean_squared_error'
+        loss = 'mean_squared_error'
         # loss = 'kullback_leibler_divergence'
         self.sequence_autoencoder.compile(optimizer=optimizer,
                                           loss=loss,
