@@ -49,13 +49,14 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_inputs2 = Dense(output_dim, activation='sigmoid')(encoder_inputs)
+        encoder_inputs2 = Dense(input_dim, activation='sigmoid')(encoder_inputs)
         encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_inputs2)
         encoder_states = [state_h, state_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
+        decoder_inputs2 = Dense(input_dim, activation='sigmoid')(encoder_inputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+        decoder_outputs, _, _ = decoder_lstm(decoder_inputs2, initial_state=encoder_states)
         self.decoder_dense = Dense(output_dim, activation='linear')
         decoder_outputs = self.decoder_dense(decoder_outputs)
 
