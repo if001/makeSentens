@@ -181,6 +181,8 @@ def train_main(tr):
         print("train step : ", step)
         hist = tr.model.train(train_data, teach_data, teach_target_data)
         tr.hists = tr.append_hist(hist, tr.hists)
+        tr.model.waitController('save', 'param_seq2seq.hdf5')
+        tr.load_test(word_lists, ds)
 
         if (step % tr.check_point == 0) and (step != 0):
             # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
@@ -194,11 +196,8 @@ def make_sentens_main(tr):
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
 
-
-    tr.fact_seq2seq()
-
     tr.model.waitController('load', 'param_seq2seq.hdf5')
-    tr.load_test(word_lists, ds)
+    # tr.load_test(word_lists, ds)
     tr.model.make_decode_net()
 
     for i in range(10):
