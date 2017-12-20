@@ -54,7 +54,7 @@ class Seq2Seq(lib.Const.Const):
         encoder_states = [state_h, state_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
-        decoder_inputs2 = Dense(input_dim, activation='sigmoid')(encoder_inputs)
+        decoder_inputs2 = Dense(input_dim, activation='sigmoid')(decoder_inputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
         decoder_outputs, _, _ = decoder_lstm(decoder_inputs2, initial_state=encoder_states)
         self.decoder_dense = Dense(output_dim, activation='linear')
