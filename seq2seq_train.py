@@ -48,7 +48,7 @@ class Trainer(lib.Const.Const):
         super().__init__()
         self.window_size = 1
         self.hists = [[],[],[],[]]
-
+        self.model = nn.Seq2SeqOfficial.Seq2Seq()
 
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
@@ -63,13 +63,11 @@ class Trainer(lib.Const.Const):
 
 
     def fact_seq2seq(self):
-        self.model = nn.Seq2SeqOfficial.Seq2Seq()
         self.model.make_net()
         self.model.model_complie()
 
 
     def fact_decode_net(self):
-        self.model = nn.Seq2SeqOfficial.Seq2Seq()
         self.model.make_net()
         self.model.model_complie()
         self.model.make_decode_net()
@@ -165,8 +163,6 @@ def train_main(tr):
     tr.init_word2vec("load")
     # tr.init_word2vec("learn")
 
-    tr.fact_seq2seq()
-
     ds = lib.DataShaping.DataShaping()
 
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
@@ -174,6 +170,8 @@ def train_main(tr):
     if '--resume' in sys.argv:
         print('resume param_seq2seq.hdf5')
         tr.model.waitController('load', 'param_seq2seq.hdf5')
+    else :
+        tr.fact_seq2seq()
 
     for step in range(lib.Const.Const().learning_num):
         chose_bucket = tr.select_random_bucket()
