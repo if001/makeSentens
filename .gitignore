@@ -7,6 +7,7 @@ aozora_text3/files/*
 nn/model/*
 nn/wait/*
 dictionaly/
+tflog/
 .DS_Store
 cython_package/build/
 cython_package/cython_package.cpython-35m-darwin.so

@@ -1,15 +1,6 @@
 '''
 lstmを使って文章生成
 word2vecを自作して、vector化
-今度こそ
-
-word2vecはSkip-gramではなく
-CBoWを採用
-
-batch_input_shape=(None,\
-                   LSTMの中間層に入力するデータの数（※文書データなら単語の数）,\
-                   LSTM中間層に投入するデータの次元数（※文書データなら１次元配列なので1)
-                  )
 '''
 
 
@@ -181,8 +172,6 @@ def train_main(tr):
         print("train step : ", step)
         hist = tr.model.train(train_data, teach_data, teach_target_data)
         tr.hists = tr.append_hist(hist, tr.hists)
-        tr.model.waitController('save', 'param_seq2seq.hdf5')
-        tr.load_test(word_lists, ds)
 
         if (step % tr.check_point == 0) and (step != 0):
             # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))

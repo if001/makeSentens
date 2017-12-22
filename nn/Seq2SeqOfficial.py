@@ -16,7 +16,7 @@ from keras.layers.core     import Flatten
 from keras.layers          import merge, multiply
 from keras.optimizers import Adam,SGD,RMSprop
 
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, TensorBoard
 from keras.layers.normalization import BatchNormalization as BN
 
 from keras import regularizers
@@ -36,8 +36,8 @@ class Seq2Seq(lib.Const.Const):
         self.input_word_num = 1
         self.latent_dim = 512
         self.latent_dim2 = 1024
-        self.latent_dim3 = 512
-
+        tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
+        self.cbks = [tb_cb]
 
     def make_net(self):
         """ make net by reference to Keras official doc """
@@ -49,20 +49,21 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_inputs2 = Dense(input_dim, activation='sigmoid')(encoder_inputs)
-        encoder_outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_inputs2)
+        encoder_dense_outputs = Dense(input_dim, activation='sigmoid')(encoder_inputs)
+        encoder_bi_outputs = Bi(LSTM(self.latent_dim, return_sequences=True , dropout=0.6, recurrent_dropout=0.6))(encoder_dense_outputs)
+        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_bi_outputs)
         encoder_states = [state_h, state_c]
 
+
         decoder_inputs = Input(shape=(None, input_dim))
-        decoder_inputs2 = Dense(input_dim, activation='sigmoid')(decoder_inputs)
+        decoder_dense_outputs = Dense(input_dim, activation='sigmoid')(decoder_inputs)
+        decoder_bi_outputs = Bi(LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6))(decoder_dense_outputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs2, initial_state=encoder_states)
-        decoder_dense = Dense(output_dim, activation='linear')
-        decoder_outputs = decoder_dense(decoder_outputs)
+        decoder_outputs, _, _ = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
+        decoder_outputs = Dense(output_dim, activation='relu')(decoder_outputs)
+        decoder_outputs = Dense(output_dim, activation='linear')(decoder_outputs)
 
         self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-
-        # return encoder_inputs, encoder_states, decoder_inputs, decoder_lstm, decoder_dense
 
 
     def make_decode_net(self):
@@ -75,6 +76,7 @@ class Seq2Seq(lib.Const.Const):
 
         encoder_inputs = Input(shape=(None, input_dim))
         encoder_inputs2 = Dense(input_dim, activation='sigmoid', weights=d1.get_weights())(encoder_inputs)
+
         _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=encoder_lstm_l.get_weights())(encoder_inputs2)
         encoder_states = [state_h, state_c]
         self.encoder_model = Model(encoder_inputs, encoder_states)
@@ -114,9 +116,9 @@ class Seq2Seq(lib.Const.Const):
     def train(self, encoder_input_data, decoder_input_data, decoder_target_data):
         """ Run training """
         loss = self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-                                      batch_size=self.batch_size,
-                                      epochs=1,
-                                      validation_split=0.2)
+                                             batch_size=self.batch_size,
+                                             epochs=1,
+                                             validation_split=0.2)
         return loss
 
 
@@ -193,8 +195,6 @@ def main():
 
     for i in range(15):
         seq2seq.train(inp_batch, out_batch, out_target_batch)
-
-    # seq2seq.waitController("save","tmp")
 
     """ test  """
     seq2seq.make_decode_net()
