@@ -50,14 +50,16 @@ class Seq2Seq(lib.Const.Const):
 
         encoder_inputs = Input(shape=(None, input_dim))
         encoder_dense_outputs = Dense(input_dim, activation='sigmoid')(encoder_inputs)
-        encoder_bi_outputs = Bi(LSTM(self.latent_dim, return_sequences=True , dropout=0.6, recurrent_dropout=0.6))(encoder_dense_outputs)
+        encoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True , dropout=0.6, recurrent_dropout=0.6)
+        encoder_bi_outputs = Bi(encoder_bi_lstm)(encoder_dense_outputs)
         _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_bi_outputs)
         encoder_states = [state_h, state_c]
 
 
         decoder_inputs = Input(shape=(None, input_dim))
         decoder_dense_outputs = Dense(input_dim, activation='sigmoid')(decoder_inputs)
-        decoder_bi_outputs = Bi(LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6))(decoder_dense_outputs)
+        decoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6)
+        decoder_bi_outputs = Bi(decoder_bi_lstm)(decoder_dense_outputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
         decoder_outputs, _, _ = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
         decoder_outputs = Dense(output_dim, activation='relu')(decoder_outputs)
@@ -72,12 +74,11 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-        ei, ed, eb, el, di, dd, db, dl, dd2 = self.sequence_autoencoder.layers
-        # _, _, d1, d2, encoder_lstm_l, decoder_lstm_l, decoder_dense_l = self.sequence_autoencoder.layers
-
+        ei, di, ed, dd, eb, db, el, dl, dd2, dd3 = self.sequence_autoencoder.layers
+        
         encoder_inputs = Input(shape=(None, input_dim))
         encoder_dense_output = Dense(input_dim, activation='sigmoid', weights=ed.get_weights())(encoder_inputs)
-        encoder_bi_output = Bi(LSTM(self.latent_dim, return_state=True, weights=eb.get_weights()))(encoder_dense_output)
+        encoder_bi_output = eb(encoder_dense_output)
         _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=el.get_weights())(encoder_bi_output)
         encoder_states = [state_h, state_c]
         self.encoder_model = Model(encoder_inputs, encoder_states)
@@ -88,12 +89,12 @@ class Seq2Seq(lib.Const.Const):
 
         decoder_inputs = Input(shape=(None, input_dim))
         decoder_dense_outputs = Dense(input_dim, activation='sigmoid', weights=dd.get_weights())(decoder_inputs)
-        decoder_lstm_outputs = Bi(LSTM(self.latent_dim, return_sequences=True, weights=db.get_weights()))(decoder_dense_outputs)
-
+        decoder_lstm_outputs = db(decoder_dense_outputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, weights=dl.get_weights())
         decoder_outputs, state_h, state_c = decoder_lstm(decoder_lstm_outputs, initial_state=decoder_states_inputs)
         decoder_states = [state_h, state_c]
-        decoder_outputs = Dense(output_dim, activation='linear', weights=dd2.get_weights())(decoder_outputs)
+        decoder_outputs = Dense(output_dim, activation='relu', weights=dd2.get_weights())(decoder_outputs)
+        decoder_outputs = Dense(output_dim, activation='linear', weights=dd3.get_weights())(decoder_outputs)
 
         self.decoder_model = Model(
             [decoder_inputs] + decoder_states_inputs,
