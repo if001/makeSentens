@@ -40,6 +40,7 @@ class Trainer(lib.Const.Const):
         self.window_size = 1
         self.hists = [[],[],[],[]]
         self.model = nn.Seq2SeqOfficial.Seq2Seq()
+        self.model = nn.HRED.HRED()
 
     def init_word2vec(self,flag):
         self.word2vec = lib.WordVec.MyWord2Vec()
@@ -163,6 +164,7 @@ def train_main(tr):
         tr.model.waitController('load', 'param_seq2seq.hdf5')
     else :
         tr.fact_seq2seq()
+
 
     for step in range(lib.Const.Const().learning_num):
         chose_bucket = tr.select_random_bucket()
