@@ -72,12 +72,13 @@ class Seq2Seq(lib.Const.Const):
         input_dim = self.word_feat_len
         output_dim = self.word_feat_len
 
-        _, _, d1, d2, encoder_lstm_l, decoder_lstm_l, decoder_dense_l = self.sequence_autoencoder.layers
+        ei, ed, eb, el, di, dd, db, dl, dd2 = self.sequence_autoencoder.layers
+        # _, _, d1, d2, encoder_lstm_l, decoder_lstm_l, decoder_dense_l = self.sequence_autoencoder.layers
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_inputs2 = Dense(input_dim, activation='sigmoid', weights=d1.get_weights())(encoder_inputs)
-
-        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=encoder_lstm_l.get_weights())(encoder_inputs2)
+        encoder_dense_output = Dense(input_dim, activation='sigmoid', weights=ed.get_weights())(encoder_inputs)
+        encoder_bi_output = Bi(LSTM(self.latent_dim, return_state=True, weights=eb.get_weights()))(encoder_dense_output)
+        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=el.get_weights())(encoder_bi_output)
         encoder_states = [state_h, state_c]
         self.encoder_model = Model(encoder_inputs, encoder_states)
 
@@ -86,12 +87,13 @@ class Seq2Seq(lib.Const.Const):
         decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
-        decoder_inputs2 = Dense(input_dim, activation='sigmoid', weights=d2.get_weights())(decoder_inputs)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, weights=decoder_lstm_l.get_weights())
-        decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs2, initial_state=decoder_states_inputs)
+        decoder_dense_outputs = Dense(input_dim, activation='sigmoid', weights=dd.get_weights())(decoder_inputs)
+        decoder_lstm_outputs = Bi(LSTM(self.latent_dim, return_sequences=True, weights=db.get_weights()))(decoder_dense_outputs)
 
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, weights=dl.get_weights())
+        decoder_outputs, state_h, state_c = decoder_lstm(decoder_lstm_outputs, initial_state=decoder_states_inputs)
         decoder_states = [state_h, state_c]
-        decoder_outputs = Dense(output_dim, activation='linear', weights=decoder_dense_l.get_weights())(decoder_outputs)
+        decoder_outputs = Dense(output_dim, activation='linear', weights=dd2.get_weights())(decoder_outputs)
 
         self.decoder_model = Model(
             [decoder_inputs] + decoder_states_inputs,
