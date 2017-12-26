@@ -190,11 +190,12 @@ def train_main():
         state_c_batch = []
 
         for i in range(const.batch_size):
-            seq = hred.get_sentens(word_lists, const.context_size)
+            seq = ds.get_sentens(word_lists, 2)
             state_h_seq = []
             state_c_seq = []
             for value in seq:
-                state_h, state_c = encoder_model.predict(train_data)
+                state_h, state_c = encoder_model.predict(value)
+
                 state_h_seq.append(state_h)
                 state_c_seq.append(state_c)
             state_h_batch.append(state_h_seq)

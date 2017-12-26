@@ -84,20 +84,30 @@ class HRED(lib.Const.Const):
         output_dim = self.latent_dim
         inputs = Input(shape=(None, input_dim))
         outputs = LSTM(self.latent_dim)(inputs)
-        l = Model(inputs, outputs)
         return Model(inputs, outputs)
 
 
-    def build_autoencoder(self, encoder, decoder):
+    def build_autoencoder(self, encoder, decoder, context_h, context_c):
         input_dim = self.latent_dim
         output_dim = self.latent_dim
 
+        # encoder
         encoder_inputs = Input(shape=(None, input_dim))
         ei, ed, el = encoder.layers
         dense_outputs = ed(encoder_inputs)
         encoder_output, state_h, state_c = el(dense_outputs)
-        encoder_states = [state_h, state_c]
 
+        # context
+        cih, clh = context_h.layers
+        clh.trainable = False
+        state_h_output = clh(state_h)
+
+        cic, clc = context_c.layers
+        clc.trainable = False
+        state_c_output = clc(state_c)
+        encoder_states = [state_h_output, state_c_output]
+
+        # decoder
         decoder_inputs = Input(shape=(None, input_dim))
         di, dd1, di2, di3, dl, dd2,dd3 = decoder.layers
         decoder_dense_outputs = dd1(decoder_inputs)
