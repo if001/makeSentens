@@ -75,7 +75,7 @@ class Seq2Seq(lib.Const.Const):
         output_dim = self.word_feat_len
 
         ei, di, ed, dd, eb, db, el, dl, dd2, dd3 = self.sequence_autoencoder.layers
-        
+
         encoder_inputs = Input(shape=(None, input_dim))
         encoder_dense_output = Dense(input_dim, activation='sigmoid', weights=ed.get_weights())(encoder_inputs)
         encoder_bi_output = eb(encoder_dense_output)

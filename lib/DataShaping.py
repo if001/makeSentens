@@ -9,8 +9,8 @@ class DataShaping():
     def __init__(self):
         self.str_op = lib.StringOperation.StringOperation("load")
 
-    def select_random_sentens(self,word_lists):
-        index = random.randint(0,len(word_lists)-2)
+    def select_random_sentens(self,word_lists, n):
+        index = random.randint(0,len(word_lists)-n)
         __sentens = word_lists[index]
         return __sentens
 
@@ -20,6 +20,14 @@ class DataShaping():
         __sentens1 = word_lists[index]
         __sentens2 = word_lists[index+1]
         return __sentens1,__sentens2
+
+
+    def select_random_sentens_n(self,word_lists, n):
+        __sentens_list = []
+        index = random.randint(0,len(word_lists)-n)
+        for i in range(n):
+            __sentens_list.append(word_lists[index+i])
+        return __sentens_list
 
 
     def select_bucket(self,sentens_arr,flag=0):
@@ -33,25 +41,26 @@ class DataShaping():
         return index
 
 
-    def train_data_shaping(self, train_sentens_vec_batch, train_sentens, seq_num):
+    def train_data_shaping(self, train_sentens_vec_batch, train_sentens):
         if "BOS" in train_sentens: train_sentens.remove("BOS")
-        train_sentens = self.str_op.EOF_padding(train_sentens, seq_num)
         train_sentens = train_sentens[::-1]
+        print(train_sentens)
         train_sentens_vec = self.str_op.sentens_array_to_vec(train_sentens)
         train_sentens_vec_batch.append(train_sentens_vec)
         return train_sentens_vec_batch
 
 
-    def teach_data_shaping(self, teach_sentens_vec_batch, teach_sentens, seq_num):
-        teach_sentens = self.str_op.EOF_padding(teach_sentens, seq_num)
+    def teach_data_shaping(self, teach_sentens_vec_batch, teach_sentens):
         teach_sentens_vec = self.str_op.sentens_array_to_vec(teach_sentens)
         teach_sentens_vec_batch.append(teach_sentens_vec)
         return teach_sentens_vec_batch
 
 
-    def teach_target_data_shaping(self, teach_target_sentens_vec_batch, teach_sentens, seq_num):
+    def teach_target_data_shaping(self, teach_target_sentens_vec_batch, teach_sentens):
         if "BOS" in teach_sentens: teach_sentens.remove("BOS")
-        teach_target_sentens = self.str_op.EOF_padding(teach_sentens, seq_num)
+        teach_target_sentens = teach_sentens
+        teach_target_sentens.append("。")
+        print(teach_target_sentens)
         teach_target_sentens_vec = self.str_op.sentens_array_to_vec(teach_target_sentens)
         teach_target_sentens_vec_batch.append(teach_target_sentens_vec)
         return teach_target_sentens_vec_batch
@@ -85,3 +94,12 @@ class DataShaping():
 
         return train_sentens_vec_batch, teach_sentens_vec_batch, teach_target_sentens_vec_batch
 
+
+    def get_sentens(self, word_lists, n):
+        __seq = []
+        __word_lists = word_lists[::]
+        train_sentens = self.select_random_sentens(__word_lists, n)
+        __index = __word_lists.index(train_sentens)
+        for i in range(n-1):
+            __seq.append(__index + i)
+        return __seq

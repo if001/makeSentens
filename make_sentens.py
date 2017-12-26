@@ -172,19 +172,36 @@ def train_main():
         context_c = hred.model_compile(context_c)
 
     decoder_model = hred.model_compile(decoder_model)
+    autoencoder = hred.build_autoencoder(encoder_model, decoder_model)
+    autoencoder = hred.model_compile(autoencoder)
 
     for step in range(const.learning_num):
         print("train step : ", step)
         chose_bucket = select_random_bucket(const)
         print("chose bucket", chose_bucket)
 
+
+
+        train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.batch_size, chose_bucket)
+        hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data)
+
+
         state_h_batch = []
         state_c_batch = []
-        train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.context_size, chose_bucket)
-        state_h, state_c = encoder_model.predict(train_data)
-        state_h_batch.append(state_h)
-        state_c_batch.append(state_c)
 
+        for i in range(const.batch_size):
+            seq = hred.get_sentens(word_lists, const.context_size)
+            state_h_seq = []
+            state_c_seq = []
+            for value in seq:
+                state_h, state_c = encoder_model.predict(train_data)
+                state_h_seq.append(state_h)
+                state_c_seq.append(state_c)
+            state_h_batch.append(state_h_seq)
+            state_c_batch.append(state_c_seq)
+
+        hred.train_context(context_h, train_data, teach_data)
+        hred.train_context(context_c, train_data, teach_data)
 
 
         # print("train context")

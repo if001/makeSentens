@@ -36,126 +36,144 @@ class HRED(lib.Const.Const):
         self.input_word_num = 1
         self.latent_dim = 256
         self.latent_dim2 = 512
+
+        self.word_feat_len = 5
+        self.latent_dim = 5
+        self.latent_dim2 = 10
+
         tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
         self.cbks = [tb_cb]
 
-    def build_context_net(self):
+
+    def build_encoder(self, model=None):
         input_dim = self.latent_dim
         output_dim = self.latent_dim
-        inputs = Input(shape=(None, input_dim))
-        outputs = LSTM(self.latent_dim, return_state=True)(inputs)
-        return Model(inputs, outputs)
-
-
-    def build_net(self, context_model_h, context_model_c):
-        """ make net by reference to Keras official doc """
-        # # テスト用ぱらめた
-        # input_dim = 5
-        # output_dim = 5
-
-        input_dim = self.word_feat_len
-        output_dim = self.word_feat_len
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_dense_outputs = Dense(self.latent_dim, activation='sigmoid')(encoder_inputs)
-        _, state_h, state_c = LSTM(self.latent_dim2, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_dense_outputs)
+        if model ==  None :
+            encoder_dense_outputs = Dense(input_dim, activation='sigmoid')(encoder_inputs)
+            _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_dense_outputs)
+        else :
+            _, ed, el = model.layers
+            encoder_dense_outputs = ed(encoder_inputs)
+            _, state_h, state_c = el(encoder_dense_outputs)
+        return Model(encoder_inputs, [state_h, state_c])
 
-        h_input, h_lstm = context_model_h.layers
-        c_input, c_lstm = context_model_c.layers
 
-        state_h = h_lstm(state_h)
-        state_c = c_lstm(state_c)
-        encoder_states = [state_h, state_c]
+    def build_decoder(self, model=None):
+        input_dim = self.latent_dim
+        output_dim = self.latent_dim
+
+        encoder_h = Input(shape=(self.latent_dim,))
+        encoder_c = Input(shape=(self.latent_dim,))
+        encoder_states =  [encoder_h, encoder_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
         decoder_dense_outputs = Dense(input_dim, activation='sigmoid')(decoder_inputs)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_outputs, _, _ = decoder_lstm(decoder_dense_outputs, initial_state=encoder_states)
+        decoder_outputs, decoder_h, decoder_c = decoder_lstm(decoder_dense_outputs, initial_state=encoder_states)
+        decoder_states = [decoder_h, decoder_c]
         decoder_outputs = Dense(output_dim, activation='relu')(decoder_outputs)
         decoder_outputs = Dense(output_dim, activation='linear')(decoder_outputs)
 
-        self.sequence_autoencoder = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+        return Model([decoder_inputs] + encoder_states, [decoder_outputs] + decoder_states)
 
 
-    def build_decode_net(self):
-        """ for decoding net """
+    def build_context_model(self):
+        input_dim = self.latent_dim
+        output_dim = self.latent_dim
+        inputs = Input(shape=(None, input_dim))
+        outputs = LSTM(self.latent_dim)(inputs)
+        l = Model(inputs, outputs)
+        return Model(inputs, outputs)
 
-        input_dim = self.word_feat_len
-        output_dim = self.word_feat_len
 
-        ei, di, ed, dd, eb, db, el, dl, dd2, dd3 = self.sequence_autoencoder.layers
+    def build_autoencoder(self, encoder, decoder):
+        input_dim = self.latent_dim
+        output_dim = self.latent_dim
 
         encoder_inputs = Input(shape=(None, input_dim))
-        encoder_dense_output = Dense(input_dim, activation='sigmoid', weights=ed.get_weights())(encoder_inputs)
-        encoder_bi_output = eb(encoder_dense_output)
-        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, weights=el.get_weights())(encoder_bi_output)
+        ei, ed, el = encoder.layers
+        dense_outputs = ed(encoder_inputs)
+        encoder_output, state_h, state_c = el(dense_outputs)
         encoder_states = [state_h, state_c]
-        self.encoder_model = Model(encoder_inputs, encoder_states)
-
-        decoder_state_input_h = Input(shape=(self.latent_dim,))
-        decoder_state_input_c = Input(shape=(self.latent_dim,))
-        decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
 
         decoder_inputs = Input(shape=(None, input_dim))
-        decoder_dense_outputs = Dense(input_dim, activation='sigmoid', weights=dd.get_weights())(decoder_inputs)
-        decoder_lstm_outputs = db(decoder_dense_outputs)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, weights=dl.get_weights())
-        decoder_outputs, state_h, state_c = decoder_lstm(decoder_lstm_outputs, initial_state=decoder_states_inputs)
-        decoder_states = [state_h, state_c]
-        decoder_outputs = Dense(output_dim, activation='relu', weights=dd2.get_weights())(decoder_outputs)
-        decoder_outputs = Dense(output_dim, activation='linear', weights=dd3.get_weights())(decoder_outputs)
+        di, dd1, di2, di3, dl, dd2,dd3 = decoder.layers
+        decoder_dense_outputs = dd1(decoder_inputs)
+        decoder_lstm_outputs, _ , _ =  dl(decoder_dense_outputs, initial_state=encoder_states)
+        decoder_dense2_outputs = dd2(decoder_lstm_outputs)
+        outputs = dd3(decoder_dense2_outputs)
 
-        self.decoder_model = Model(
-            [decoder_inputs] + decoder_states_inputs,
-            [decoder_outputs] + decoder_states)
+        return Model([encoder_inputs, decoder_inputs], outputs)
 
 
-    def model_complie(self):
+    def model_compile(self, model):
         """ complie """
         optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
         loss = 'mean_squared_error'
         # loss = 'kullback_leibler_divergence'
-        self.sequence_autoencoder.compile(optimizer=optimizer,
-                                          loss=loss,
-                                          metrics=['accuracy'])
+        model.compile(optimizer=optimizer,
+                      loss=loss,
+                      metrics=['accuracy'])
+        model.summary()
+        return model
 
-        self.sequence_autoencoder.summary()
 
-
-    def train(self, encoder_input_data, decoder_input_data, decoder_target_data):
+    def train_def_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data):
         """ Run training """
-        loss = self.sequence_autoencoder.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+        loss = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
                                              batch_size=self.batch_size,
                                              epochs=1,
                                              validation_split=0.2)
         return loss
 
 
-
-    def make_sentens_vec(self, decoder_model, states_value, start_token):
-        sentens_vec = []
-        end_len = 20
-        word_vec = start_token
-
-        stop_condition = False
-        while not stop_condition:
-            word_vec, h, c = decoder_model.predict([word_vec] + states_value)
-            sentens_vec.append(word_vec)
-            states_value = [h, c]
-            if (sentens_vec == 0 or len(sentens_vec) == 5 ):
-                stop_condition = True
-
-        return sentens_vec
+    def train_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data):
+        """ Run training """
+        loss = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+                                             batch_size=self.batch_size,
+                                             epochs=1,
+                                             validation_split=0.2)
+        return loss
 
 
-    def waitController(self,flag, fname, model):
-        if flag == "save":
-            print("save"+self.seq2seq_wait_save_dir+fname)
-            model.save(self.seq2seq_wait_save_dir+fname)
-        if flag == "load":
-            print("load"+self.seq2seq_wait_save_dir+fname)
-            from keras.models import load_model
-            return load_model(self.seq2seq_wait_save_dir+fname)
+    def train_context(self, model, train_data, teach_data):
+        """ Run training """
+        loss = model.fit(train_data, teach_data,
+                         batch_size=self.batch_size,
+                         epochs=1,
+                         validation_split=0.2)
+
+        return loss
+
+
+
+    # def make_sentens_vec(self, decoder_model, states_value, start_token):
+    #     sentens_vec = []
+    #     end_len = 20
+    #     word_vec = start_token
+
+    #     stop_condition = False
+    #     while not stop_condition:
+    #         word_vec, h, c = decoder_model.predict([word_vec] + states_value)
+    #         sentens_vec.append(word_vec)
+    #         states_value = [h, c]
+    #         if (sentens_vec == 0 or len(sentens_vec) == 5 ):
+    #             stop_condition = True
+
+    #     return sentens_vec
+
+
+    def save_models(self, fname, model):
+        print("save"+self.seq2seq_wait_save_dir+fname)
+        model.save(self.seq2seq_wait_save_dir+fname)
+
+    def load_models(self, fname):
+        print("load"+self.seq2seq_wait_save_dir+fname)
+        from keras.models import load_model
+        return load_model(self.seq2seq_wait_save_dir+fname)
+
 
 
 def main():
