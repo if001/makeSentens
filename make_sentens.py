@@ -20,7 +20,6 @@ import sys
 import matplotlib.pyplot as plt
 #import pylab as plt
 from itertools import chain #配列ふらっと化
-import random
 
 
 # mylib
@@ -28,53 +27,24 @@ import lib
 import nn
 
 # cython
-#import pyximport; pyximport.install()
-#import cythonFunc
-import cython_package.cython_package as cy
-
-# TMP_BUCKET = (20,25)
-
-# class Trainer(lib.Const.Const):
-#     def __init__(self):
-#         super().__init__()
-#         self.window_size = 1
-#         self.hists = [[],[],[],[]]
+# import pyximport; pyximport.install()
+# import cythonFunc
+# import cython_package.cython_package as cy
 
 
-#     def make_sentens_vec(self, decoder_model, states_value, start_token, end_token, end_len):
-#         sentens_vec = []
-#         word_vec = start_token
+def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
+    sentens_vec = []
+    word_vec = start_token
 
-#         stop_condition = False
-#         while not stop_condition:
-#             word_vec, h, c = decoder_model.predict([word_vec] + states_value)
-#             sentens_vec.append(word_vec.reshape(self.word_feat_len))
-#             states_value = [h, c]
-#             if (np.allclose(word_vec, end_token) or len(sentens_vec) == end_len ):
-#                 stop_condition = True
-#         return sentens_vec
+    stop_condition = False
+    while not stop_condition:
+        word_vec, h, c = decoder_model.predict([word_vec, states_h, states_c])
+        sentens_vec.append(word_vec.reshape(len(start_token[0][0])))
+        states_value = [h, c]
+        if (np.allclose(word_vec, end_token) or len(sentens_vec) == 50 ):
+            stop_condition = True
+    return sentens_vec
 
-
-    # def append_hist(self, hist, hists):
-    #     hists[0].append(hist.history['acc'][0])
-    #     hists[1].append(hist.history['val_acc'][0])
-
-    #     hists[2].append(hist.history['loss'][0])
-    #     hists[3].append(hist.history['val_loss'][0])
-    #     return hists
-
-
-    # def save_data(self, strs, fname):
-    #     with open("./fig/"+fname, "w") as file:
-    #         file.writelines(str(strs))
-
-
-    # def load_test(self, word_lists, ds):
-    #     for value in self.buckets:
-    #         __train, __teach, __target  = ds.make_data(word_lists, self.batch_size, value)
-    #         so = lib.StringOperation.StringOperation()
-    #         __ev = self.model.sequence_autoencoder.evaluate([__train, __teach], __target, batch_size = self.batch_size, verbose=1)
-    #         print(value, " : ", __ev)
 
 def init_word2vec(const, flag):
     word2vec = lib.WordVec.MyWord2Vec()
@@ -112,13 +82,19 @@ def get_word_lists(file_path):
         wordlists.append(line.split(" "))
 
     print("wordlist num:",len(wordlists))
-    return wordlists
+    return wordlists[:-1]
 
 
-def pre_train_main():
+def save_model_fig(model, fname):
+    import pydot
+    from keras.utils import plot_model
+    plot_model(model, to_file=fname)
+
+
+def train_main():
     const = lib.Const.Const()
-    # init_word2vec(const, "load")
-    init_word2vec(const, "learn")
+    init_word2vec(const, "load")
+    # init_word2vec(const, "learn")
 
     ds = lib.DataShaping.DataShaping()
     hred = nn.HRED.HRED()
@@ -128,37 +104,6 @@ def pre_train_main():
     if '--resume' in sys.argv:
         encoder_model = hred.load_models('param_seq2seq_encoder.hdf5')
         decoder_model = hred.load_models('param_seq2seq_decoder.hdf5')
-    else :
-        encoder_model = hred.build_encoder()
-        decoder_model = hred.build_decoder()
-
-    autoencoder = hred.build_autoencoder(encoder_model, decoder_model)
-    autoencoder = hred.model_compile(autoencoder)
-
-    for step in range(const.learning_num):
-        print("pre train step : ", step)
-        chose_bucket = select_random_bucket(const)
-        print("chose bucket", chose_bucket)
-
-        train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.batch_size, chose_bucket)
-        hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data)
-        hred.save_models('param_seq2seq_encoder.hdf5', encoder_model)
-        hred.save_models('param_seq2seq_decoder.hdf5', decoder_model)
-
-
-def train_main():
-    const = lib.Const.Const()
-    # init_word2vec(const, "load")
-    init_word2vec(const, "learn")
-
-    ds = lib.DataShaping.DataShaping()
-    hred = nn.HRED.HRED()
-
-    word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
-
-
-    if '--resume' in sys.argv:
-        encoder_model = hred.load_models('param_seq2seq_encoder.hdf5')
         context_h = hred.load_models('param_seq2seq_h.hdf5')
         context_c = hred.load_models('param_seq2seq_c.hdf5')
     else :
@@ -168,101 +113,106 @@ def train_main():
         context_c = hred.build_context_model()
 
         encoder_model = hred.model_compile(encoder_model)
-        context_h =  hred.model_compile(context_h)
+        decoder_model = hred.model_compile(decoder_model)
+        context_h = hred.model_compile(context_h)
         context_c = hred.model_compile(context_c)
 
-    decoder_model = hred.model_compile(decoder_model)
-    autoencoder = hred.build_autoencoder(encoder_model, decoder_model)
+    autoencoder = hred.build_autoencoder(encoder_model, decoder_model, context_h, context_c)
     autoencoder = hred.model_compile(autoencoder)
 
-    for step in range(const.learning_num):
-        print("train step : ", step)
-        chose_bucket = select_random_bucket(const)
-        print("chose bucket", chose_bucket)
+    meta_hh = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    for i in range(len(word_lists)):
+        train_data, teach_data, teach_target_data = ds.make_data_seq(word_lists, const.batch_size, i)
+        hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
+        state_h, state_c = encoder_model.predict(train_data)
+        state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
+        state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)
+        _, meta_hh, meta_hc = context_h.predict([state_h, meta_hh, meta_hc])
+        _, meta_ch, meta_cc = context_c.predict([state_c, meta_ch, meta_cc])
+
+        if i % 10 == 0:
+            hred.save_models('param_seq2seq_encoder.hdf5', encoder_model)
+            hred.save_models('param_seq2seq_decoder.hdf5', decoder_model)
+            hred.save_models('param_seq2seq_h.hdf5', context_h)
+            hred.save_models('param_seq2seq_c.hdf5', context_c)
 
 
-
-        train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.batch_size, chose_bucket)
-        hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data)
-
-
-        state_h_batch = []
-        state_c_batch = []
-
-        for i in range(const.batch_size):
-            seq = ds.get_sentens(word_lists, 2)
-            state_h_seq = []
-            state_c_seq = []
-            for value in seq:
-                state_h, state_c = encoder_model.predict(value)
-
-                state_h_seq.append(state_h)
-                state_c_seq.append(state_c)
-            state_h_batch.append(state_h_seq)
-            state_c_batch.append(state_c_seq)
-
-        hred.train_context(context_h, train_data, teach_data)
-        hred.train_context(context_c, train_data, teach_data)
-
-
-        # print("train context")
-        # train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.context_size, chose_bucket)
-        # hred.train(context_h, train_data, teach_data)
-        # hred.train(context_c, train_data, teach_data)
-
-        # print("train autoencoder")
-        # train_data, teach_data, teach_target_data = ds.make_data(word_lists, const.batch_size, chose_bucket)
-        # hred.train(autoencoder, train_data, teach_data, teach_target_data)
-
-
-
-        # hred.train(context_h, )
-        # hred.train(context_c, )
-    
-        # tr.hists = tr.append_hist(hist, tr.hists)
-        # if (step % tr.check_point == 0) and (step != 0):
-        #     # tr.plot(tr.hists, str(chose_bucket[0])+"_"+str(chose_bucket[1]))
-        #     tr.model.waitController('save', 'param_seq2seq.hdf5')
-        #     tr.load_test(word_lists, ds)
-
-
-def make_sentens_main(tr):
-    tr.init_word2vec("load")
+def make_sentens_main():
+    const = lib.Const.Const()
+    init_word2vec(const, "load")
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
+    print(word_lists)
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
 
-    tr.model.waitController('load', 'param_seq2seq.hdf5')
-    # tr.load_test(word_lists, ds)
-    tr.model.make_decode_net()
+    # load
+    hred = nn.HRED.HRED()
+    encoder_model = hred.load_models('param_seq2seq_encoder.hdf5')
+    decoder_model = hred.load_models('param_seq2seq_decoder.hdf5')
+    context_h = hred.load_models('param_seq2seq_h.hdf5')
+    context_c = hred.load_models('param_seq2seq_c.hdf5')
 
-    for i in range(10):
-        chose_bucket = tr.select_random_bucket()
-        sentens_arr_vec, _, _ = ds.make_data(word_lists, 1, chose_bucket)
+    autoencoder = hred.build_autoencoder(encoder_model, decoder_model, context_h, context_c)
+    autoencoder = hred.model_compile(autoencoder)
 
-        __sentens_arr = so.sentens_vec_to_sentens_arr(sentens_arr_vec[0])
-        print(">> ",so.sentens_array_to_str(__sentens_arr[::-1]))
+    sentens1, sentens2 = ds.select_random_sentens2(word_lists)
 
-        states_value = tr.model.encoder_model.predict(sentens_arr_vec)
-        decoder_model = tr.model.decoder_model
+    sentens_vec_batch1 = []
+    sentens_vec_batch1 = ds.train_data_shaping(sentens_vec_batch1, sentens1)
+    sentens_vec_batch1 = np.array(sentens_vec_batch1)
+    sentens_vec_batch2 = []
+    sentens_vec_batch2 = ds.train_data_shaping(sentens_vec_batch2, sentens2)
+    sentens_vec_batch2 = np.array(sentens_vec_batch2)
 
+
+    # make meta state value
+    meta_hh = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+
+    state_h, state_c = encoder_model.predict(sentens_vec_batch1)
+    state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
+    state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)
+
+
+    # make state value
+    _, meta_hh, meta_hc = context_h.predict([state_h, meta_hh, meta_hc])
+    _, meta_ch, meta_cc = context_c.predict([state_c, meta_ch, meta_cc])
+    print(sentens_vec_batch2.shape)
+    state_h, state_c = encoder_model.predict(sentens_vec_batch2)
+
+    state_h= state_h.reshape(hred.batch_size, 1, hred.latent_dim)
+    state_h, _, _ = context_h.predict([state_h, meta_hh, meta_hc])
+    state_h = np.array(state_h)
+
+    state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)
+    state_c, _, _ = context_c.predict([state_c, meta_ch, meta_cc])
+    state_c = np.array(state_c)
+
+
+    # predict
+    for _ in range(10):
         start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])
         end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
-
-        decord_sentens_vec = tr.make_sentens_vec(decoder_model, states_value, start_token, end_token, chose_bucket[1])
-
-        decord_sentens_arr = so.sentens_vec_to_sentens_arr(decord_sentens_vec)
-        sentens = so.sentens_array_to_str(decord_sentens_arr)
+        decode_sentens_vec = make_sentens_vec(decoder_model, state_h, state_c, start_token, end_token)
+        decode_sentens_arr = so.sentens_vec_to_sentens_arr(decode_sentens_vec)
+        sentens = so.sentens_array_to_str(decode_sentens_arr)
         print(sentens)
         print("--")
 
+        # cal state value
+        decode_sentens_vec = np.array([decode_sentens_vec])
+        state_h, state_c = encoder_model.predict(decode_sentens_vec)
+        state_h = np.array(state_h)
+        state_c = np.array(state_c)
 
 def main():
-    pre_train_main()
-    exit(0)
-
     if '--train' in sys.argv:
         train_main()
 

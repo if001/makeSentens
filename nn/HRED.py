@@ -12,7 +12,7 @@ from keras.layers.embeddings import Embedding
 from keras.layers.normalization import BatchNormalization
 from keras.layers          import Lambda, Input, Dense, GRU, LSTM, RepeatVector, concatenate, Dropout, Bidirectional
 from keras.models          import Model
-from keras.layers.core     import Flatten
+from keras.layers.core     import Flatten, Reshape
 from keras.layers          import merge, multiply
 from keras.optimizers import Adam,SGD,RMSprop
 
@@ -20,6 +20,7 @@ from keras.callbacks import EarlyStopping, TensorBoard
 from keras.layers.normalization import BatchNormalization as BN
 
 from keras import regularizers
+from keras import backend as K
 
 
 import sys,os
@@ -34,25 +35,23 @@ class HRED(lib.Const.Const):
     def __init__(self):
         super().__init__()
         self.input_word_num = 1
+        self.input_dim = self.word_feat_len
+        self.output_dim = self.word_feat_len
         self.latent_dim = 256
         self.latent_dim2 = 512
-
-        self.word_feat_len = 5
-        self.latent_dim = 5
-        self.latent_dim2 = 10
 
         tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
         self.cbks = [tb_cb]
 
 
     def build_encoder(self, model=None):
-        input_dim = self.latent_dim
-        output_dim = self.latent_dim
+        K.set_learning_phase(1) #set learning phase
 
-        encoder_inputs = Input(shape=(None, input_dim))
+        encoder_inputs = Input(shape=(None, self.input_dim))
         if model ==  None :
-            encoder_dense_outputs = Dense(input_dim, activation='sigmoid')(encoder_inputs)
-            _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_dense_outputs)
+            encoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(encoder_inputs)
+            # _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_dense_outputs)
+            _, state_h, state_c = LSTM(self.latent_dim, return_state=True)(encoder_dense_outputs)
         else :
             _, ed, el = model.layers
             encoder_dense_outputs = ed(encoder_inputs)
@@ -61,61 +60,66 @@ class HRED(lib.Const.Const):
 
 
     def build_decoder(self, model=None):
-        input_dim = self.latent_dim
-        output_dim = self.latent_dim
+        K.set_learning_phase(1) #set learning phase
 
         encoder_h = Input(shape=(self.latent_dim,))
         encoder_c = Input(shape=(self.latent_dim,))
-        encoder_states =  [encoder_h, encoder_c]
+        encoder_states = [encoder_h, encoder_c]
 
-        decoder_inputs = Input(shape=(None, input_dim))
-        decoder_dense_outputs = Dense(input_dim, activation='sigmoid')(decoder_inputs)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        decoder_inputs = Input(shape=(None, self.input_dim))
+        decoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(decoder_inputs)
+        # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
         decoder_outputs, decoder_h, decoder_c = decoder_lstm(decoder_dense_outputs, initial_state=encoder_states)
         decoder_states = [decoder_h, decoder_c]
-        decoder_outputs = Dense(output_dim, activation='relu')(decoder_outputs)
-        decoder_outputs = Dense(output_dim, activation='linear')(decoder_outputs)
+        decoder_outputs = Dense(self.output_dim, activation='relu')(decoder_outputs)
+        decoder_outputs = Dense(self.output_dim, activation='linear')(decoder_outputs)
 
-        return Model([decoder_inputs] + encoder_states, [decoder_outputs] + decoder_states)
+        return Model([decoder_inputs, encoder_h, encoder_c], [decoder_outputs] + decoder_states)
 
 
     def build_context_model(self):
-        input_dim = self.latent_dim
-        output_dim = self.latent_dim
-        inputs = Input(shape=(None, input_dim))
-        outputs = LSTM(self.latent_dim)(inputs)
-        return Model(inputs, outputs)
+        K.set_learning_phase(1) #set learning phase
+        inputs = Input(shape=(None, self.latent_dim))
+        state_h_input = Input(shape=(self.latent_dim,))
+        state_c_input = Input(shape=(self.latent_dim,))
+        state_value = [state_h_input, state_c_input]
+        outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(inputs, initial_state=state_value)
+        return Model([inputs, state_h_input, state_c_input], [outputs, state_h, state_c])
 
 
     def build_autoencoder(self, encoder, decoder, context_h, context_c):
-        input_dim = self.latent_dim
-        output_dim = self.latent_dim
-
         # encoder
-        encoder_inputs = Input(shape=(None, input_dim))
+        encoder_inputs = Input(shape=(None, self.input_dim))
         ei, ed, el = encoder.layers
         dense_outputs = ed(encoder_inputs)
         encoder_output, state_h, state_c = el(dense_outputs)
 
         # context
-        cih, clh = context_h.layers
-        clh.trainable = False
-        state_h_output = clh(state_h)
+        cih, _, _, clh = context_h.layers
+        meta_hh = Input(shape=(self.latent_dim,))
+        meta_hc = Input(shape=(self.latent_dim,))
+        meta_h_state = [meta_hh, meta_hc]
+        state_h = Reshape((1 , self.latent_dim))(state_h)
+        state_h_output, _, _ = clh(state_h, initial_state=meta_h_state)
 
-        cic, clc = context_c.layers
-        clc.trainable = False
-        state_c_output = clc(state_c)
+        cic, _, _, clc = context_c.layers
+        meta_ch = Input(shape=(self.latent_dim,))
+        meta_cc = Input(shape=(self.latent_dim,))
+        meta_c_state = [meta_ch, meta_cc]
+        state_c = Reshape((1 , self.latent_dim))(state_c)
+        state_c_output, _, _ = clc(state_c, initial_state=meta_c_state)
         encoder_states = [state_h_output, state_c_output]
 
         # decoder
-        decoder_inputs = Input(shape=(None, input_dim))
+        decoder_inputs = Input(shape=(None, self.input_dim))
         di, dd1, di2, di3, dl, dd2,dd3 = decoder.layers
         decoder_dense_outputs = dd1(decoder_inputs)
         decoder_lstm_outputs, _ , _ =  dl(decoder_dense_outputs, initial_state=encoder_states)
         decoder_dense2_outputs = dd2(decoder_lstm_outputs)
         outputs = dd3(decoder_dense2_outputs)
 
-        return Model([encoder_inputs, decoder_inputs], outputs)
+        return Model([encoder_inputs, decoder_inputs, meta_hh, meta_hc, meta_ch, meta_cc], outputs)
 
 
     def model_compile(self, model):
@@ -129,22 +133,13 @@ class HRED(lib.Const.Const):
         model.summary()
         return model
 
-
-    def train_def_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data):
+    def train_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data, meta_hh, meta_hc, meta_ch, meta_cc):
         """ Run training """
-        loss = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-                                             batch_size=self.batch_size,
-                                             epochs=1,
-                                             validation_split=0.2)
-        return loss
-
-
-    def train_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data):
-        """ Run training """
-        loss = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-                                             batch_size=self.batch_size,
-                                             epochs=1,
-                                             validation_split=0.2)
+        # loss = model.train_on_batch([encoder_input_data, decoder_input_data, meta_hh, meta_hc, meta_ch, meta_cc], decoder_target_data)
+        loss = model.fit([encoder_input_data, decoder_input_data, meta_hh, meta_hc, meta_ch, meta_cc], decoder_target_data,
+                         batch_size=self.batch_size,
+                         epochs=1)
+        #                  # validation_split=0.2)
         return loss
 
 
