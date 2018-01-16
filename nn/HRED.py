@@ -45,35 +45,36 @@ class HRED(lib.Const.Const):
 
 
     def build_encoder(self, model=None):
-        K.set_learning_phase(1) #set learning phase
+        K.set_learning_phase(1) # set learning phase
 
         encoder_inputs = Input(shape=(None, self.input_dim))
-        if model ==  None :
-            encoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(encoder_inputs)
-            _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.5, recurrent_dropout=0.5)(encoder_dense_outputs)
-        else :
-            _, ed, el = model.layers
-            encoder_dense_outputs = ed(encoder_inputs)
-            _, state_h, state_c = el(encoder_dense_outputs)
+        encoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(encoder_inputs)
+        encoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True , dropout=0.6, recurrent_dropout=0.6)
+        encoder_bi_outputs = Bi(encoder_bi_lstm)(encoder_dense_outputs)
+        _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_bi_outputs)
+
         return Model(encoder_inputs, [state_h, state_c])
 
 
     def build_decoder(self, model=None):
-        K.set_learning_phase(1) #set learning phase
+        K.set_learning_phase(1) # set learning phase
 
         encoder_h = Input(shape=(self.latent_dim,))
         encoder_c = Input(shape=(self.latent_dim,))
         encoder_states = [encoder_h, encoder_c]
 
+
         decoder_inputs = Input(shape=(None, self.input_dim))
         decoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(decoder_inputs)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.5, recurrent_dropout=0.5)
-        decoder_outputs, decoder_h, decoder_c = decoder_lstm(decoder_dense_outputs, initial_state=encoder_states)
-        decoder_states = [decoder_h, decoder_c]
+        decoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6)
+        decoder_bi_outputs = Bi(decoder_bi_lstm)(decoder_dense_outputs)
+        # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        decoder_outputs, _, _ = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
         decoder_outputs = Dense(self.output_dim, activation='relu')(decoder_outputs)
         decoder_outputs = Dense(self.output_dim, activation='linear')(decoder_outputs)
 
-        return Model([decoder_inputs, encoder_h, encoder_c], [decoder_outputs] + decoder_states)
+        return Model([decoder_inputs, encoder_h, encoder_c], decoder_outputs)
 
 
     def build_context_model(self):
@@ -89,9 +90,10 @@ class HRED(lib.Const.Const):
     def build_autoencoder(self, encoder, decoder, context_h, context_c):
         # encoder
         encoder_inputs = Input(shape=(None, self.input_dim))
-        ei, ed, el = encoder.layers
+        ei, ed, eb, el = encoder.layers
         dense_outputs = ed(encoder_inputs)
-        encoder_output, state_h, state_c = el(dense_outputs)
+        bi_outputs = eb(dense_outputs)
+        encoder_output, state_h, state_c = el(bi_outputs)
 
         # context
         cih, _, _, clh = context_h.layers
@@ -111,9 +113,10 @@ class HRED(lib.Const.Const):
 
         # decoder
         decoder_inputs = Input(shape=(None, self.input_dim))
-        di, dd1, di2, di3, dl, dd2,dd3 = decoder.layers
+        di, dd1, db, di2, di3, dl, dd2,dd3 = decoder.layers
         decoder_dense_outputs = dd1(decoder_inputs)
-        decoder_lstm_outputs, _ , _ =  dl(decoder_dense_outputs, initial_state=encoder_states)
+        decoder_bi_outputs = db(decoder_dense_outputs)
+        decoder_lstm_outputs, _ , _ =  dl(decoder_bi_outputs, initial_state=encoder_states)
         decoder_dense2_outputs = dd2(decoder_lstm_outputs)
         outputs = dd3(decoder_dense2_outputs)
 
