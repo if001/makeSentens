@@ -50,8 +50,7 @@ class HRED(lib.Const.Const):
         encoder_inputs = Input(shape=(None, self.input_dim))
         if model ==  None :
             encoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(encoder_inputs)
-            # _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_dense_outputs)
-            _, state_h, state_c = LSTM(self.latent_dim, return_state=True)(encoder_dense_outputs)
+            _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.5, recurrent_dropout=0.5)(encoder_dense_outputs)
         else :
             _, ed, el = model.layers
             encoder_dense_outputs = ed(encoder_inputs)
@@ -68,8 +67,7 @@ class HRED(lib.Const.Const):
 
         decoder_inputs = Input(shape=(None, self.input_dim))
         decoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(decoder_inputs)
-        # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.5, recurrent_dropout=0.5)
         decoder_outputs, decoder_h, decoder_c = decoder_lstm(decoder_dense_outputs, initial_state=encoder_states)
         decoder_states = [decoder_h, decoder_c]
         decoder_outputs = Dense(self.output_dim, activation='relu')(decoder_outputs)

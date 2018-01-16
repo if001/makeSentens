@@ -93,6 +93,11 @@ def save_model_fig(model, fname):
 
 def train_main():
     const = lib.Const.Const()
+
+    # kafka
+    kafka = lib.MyKafkaProducer.MyKafkaProducer()
+    kafka.create_producer()
+
     init_word2vec(const, "load")
     # init_word2vec(const, "learn")
 
@@ -124,9 +129,12 @@ def train_main():
     meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    for i in range(len(word_lists)):
+    for i in range(const.seq_len):
         train_data, teach_data, teach_target_data = ds.make_data_seq(word_lists, const.batch_size, i)
-        hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
+        hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
+
+        kafka.send_message(i, hist.history['loss'][0])
+
         state_h, state_c = encoder_model.predict(train_data)
         state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
         state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)

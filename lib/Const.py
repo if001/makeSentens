@@ -19,7 +19,7 @@ class Const():
 
         self.buckets = [(5, 10), (10, 15), (20, 25), (40, 40)]
 
-
+        self.seq_len = 3
         """ directory setting"""
         self.project_dir = lib.SetProject.get_path()
 
@@ -31,7 +31,7 @@ class Const():
         """ seq2seq """
         # self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'
         self.seq2seq_wait_save_dir = self.project_dir+'/nn/wait/'
-        # self.seq2seq_train_file = self.project_dir+"/aozora_text/files/files_all_rnp.txt"
-        self.seq2seq_train_file = self.project_dir+"/aozora_text/files/tmp.txt"
+        self.seq2seq_train_file = self.project_dir+"/aozora_text/files/files_all_rnp.txt"
+        # self.seq2seq_train_file = self.project_dir+"/aozora_text/files/tmp.txt"
 
 
