@@ -129,11 +129,12 @@ def train_main():
     meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    for i in range(const.seq_len):
-        train_data, teach_data, teach_target_data = ds.make_data_seq(word_lists, const.batch_size, i)
+
+    for i in range(100000):
+        train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, i)
         hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
 
-        kafka.send_message(i, hist.history['loss'][0])
+        # kafka.send_message(i, hist.history['loss'][0])
 
         state_h, state_c = encoder_model.predict(train_data)
         state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
@@ -141,11 +142,35 @@ def train_main():
         _, meta_hh, meta_hc = context_h.predict([state_h, meta_hh, meta_hc])
         _, meta_ch, meta_cc = context_c.predict([state_c, meta_ch, meta_cc])
 
-        if i % 10 == 0:
+        if i % 100 == 0:
             hred.save_models('param_seq2seq_encoder.hdf5', encoder_model)
             hred.save_models('param_seq2seq_decoder.hdf5', decoder_model)
             hred.save_models('param_seq2seq_h.hdf5', context_h)
             hred.save_models('param_seq2seq_c.hdf5', context_c)
+
+
+    # for i in range(const.seq_len):
+    #     meta_hh = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    #     meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    #     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    #     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+
+    #     train_data, teach_data, teach_target_data = ds.make_data_seq(word_lists, const.batch_size, i)
+    #     hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
+
+    #     kafka.send_message(i, hist.history['loss'][0])
+
+    #     state_h, state_c = encoder_model.predict(train_data)
+    #     state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
+    #     state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)
+    #     _, meta_hh, meta_hc = context_h.predict([state_h, meta_hh, meta_hc])
+    #     _, meta_ch, meta_cc = context_c.predict([state_c, meta_ch, meta_cc])
+
+    #     if i % 10 == 0:
+    #         hred.save_models('param_seq2seq_encoder.hdf5', encoder_model)
+    #         hred.save_models('param_seq2seq_decoder.hdf5', decoder_model)
+    #         hred.save_models('param_seq2seq_h.hdf5', context_h)
+    #         hred.save_models('param_seq2seq_c.hdf5', context_c)
 
 
 def make_sentens_main():

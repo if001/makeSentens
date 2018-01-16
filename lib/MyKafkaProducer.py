@@ -23,10 +23,12 @@ class MyKafkaProducer():
 
 
     def send_message(self, x, y):
-        data = {"x" : str(x), "y" : str(y)}
-        print("send " + str(data) )
-        self.producer.send(KafkaConst.TOPIC, data)
-
+        try:
+            data = {"x" : str(x), "y" : str(y)}
+            print("send " + str(data) )
+            self.producer.send(KafkaConst.TOPIC, data)
+        except:
+            print("kafka not operate")
 
 def main():
     host1 = KafkaConst.IP1 + ':' + KafkaConst.PORT
