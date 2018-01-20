@@ -52,6 +52,7 @@ class StringOperation(lib.Const.Const):
             for p in __prob_word:
                 __word_list.append(p[0])
                 __prob.append(p[1])
+            __prob = np.array(__prob)/sum(__prob)
             __word = np.random.choice(__word_list, p=__prob)
             __arr.append(__word)
         return __arr
