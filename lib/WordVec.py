@@ -10,7 +10,6 @@ import numpy as np
 # mylib
 import lib
 
-
 class MyWord2Vec(lib.Const.Const):
     def __init__(self):
         super().__init__()
@@ -33,6 +32,10 @@ class MyWord2Vec(lib.Const.Const):
 
     def get_word(self,vec):
         return self.model.most_similar( [ vec ], [], 1)[0][0]
+
+
+    def get_some_word(self, vec, num):
+        return self.model.most_similar( [ vec ], [], num)
 
 
     def similar_words(self,st,top):
