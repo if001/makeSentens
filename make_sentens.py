@@ -234,7 +234,7 @@ def make_sentens_main():
         end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
         decode_sentens_vec = make_sentens_vec(decoder_model, state_h, state_c, start_token, end_token)
-        decode_sentens_arr = so.sentens_vec_to_sentens_arr(decode_sentens_vec)
+        decode_sentens_arr = so.sentens_vec_to_sentens_arr_prob(decode_sentens_vec)
         sentens = so.sentens_array_to_str(decode_sentens_arr)
         print(sentens)
         print("--")
