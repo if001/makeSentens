@@ -1,4 +1,7 @@
 import lib
+import random as rand
+import numpy as np
+
 
 class StringOperation(lib.Const.Const):
     def __init__(self,flag="load"):
@@ -36,6 +39,20 @@ class StringOperation(lib.Const.Const):
         __arr = []
         for value in sentens_vec:
             __word = self.word2vec.get_word(value)
+            __arr.append(__word)
+        return __arr
+
+
+    def sentens_vec_to_sentens_arr_prob(self,sentens_vec):
+        __arr = []
+        for value in sentens_vec:
+            __prob_word = self.word2vec.get_some_word(value, 5)
+            __word_list = []
+            __prob = []
+            for p in __prob_word:
+                __word_list.append(p[0])
+                __prob.append(p[1])
+            __word = np.random.choice(__word_list, p=__prob)
             __arr.append(__word)
         return __arr
 
