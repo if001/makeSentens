@@ -41,7 +41,7 @@ def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
         word_vec, h, c = decoder_model.predict([word_vec, states_h, states_c])
         sentens_vec.append(word_vec.reshape(len(start_token[0][0])))
         states_value = [h, c]
-        if (np.allclose(word_vec, end_token) or len(sentens_vec) == 50 ):
+        if (np.allclose(word_vec, end_token) or len(sentens_vec) == 15 ):
             stop_condition = True
     return sentens_vec
 
@@ -149,35 +149,11 @@ def train_main():
             hred.save_models('param_seq2seq_c.hdf5', context_c)
 
 
-    # for i in range(const.seq_len):
-    #     meta_hh = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    #     meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    #     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    #     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-
-    #     train_data, teach_data, teach_target_data = ds.make_data_seq(word_lists, const.batch_size, i)
-    #     hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
-
-    #     kafka.send_message(i, hist.history['loss'][0])
-
-    #     state_h, state_c = encoder_model.predict(train_data)
-    #     state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
-    #     state_c = state_c.reshape(hred.batch_size, 1, hred.latent_dim)
-    #     _, meta_hh, meta_hc = context_h.predict([state_h, meta_hh, meta_hc])
-    #     _, meta_ch, meta_cc = context_c.predict([state_c, meta_ch, meta_cc])
-
-    #     if i % 10 == 0:
-    #         hred.save_models('param_seq2seq_encoder.hdf5', encoder_model)
-    #         hred.save_models('param_seq2seq_decoder.hdf5', decoder_model)
-    #         hred.save_models('param_seq2seq_h.hdf5', context_h)
-    #         hred.save_models('param_seq2seq_c.hdf5', context_c)
-
-
 def make_sentens_main():
     const = lib.Const.Const()
     init_word2vec(const, "load")
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
-    print(word_lists)
+
     ds = lib.DataShaping.DataShaping()
     so = lib.StringOperation.StringOperation()
 

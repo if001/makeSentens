@@ -70,11 +70,11 @@ class HRED(lib.Const.Const):
         decoder_bi_outputs = Bi(decoder_bi_lstm)(decoder_dense_outputs)
         # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
         decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
-        decoder_outputs, _, _ = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
+        decoder_outputs, output_h, output_c = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
         decoder_outputs = Dense(self.output_dim, activation='relu')(decoder_outputs)
         decoder_outputs = Dense(self.output_dim, activation='linear')(decoder_outputs)
 
-        return Model([decoder_inputs, encoder_h, encoder_c], decoder_outputs)
+        return Model([decoder_inputs, encoder_h, encoder_c], [decoder_outputs, output_h, output_c])
 
 
     def build_context_model(self):
