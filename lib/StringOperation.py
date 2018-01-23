@@ -2,23 +2,21 @@ import lib
 import random as rand
 import numpy as np
 
-
-class StringOperation(lib.Const.Const):
-    def __init__(self,flag="load"):
-        super().__init__()
-        self.word2vec = lib.WordVec.MyWord2Vec()
-        self.word2vec.load_model()
-
-        # if flag == "learn":
-        #     self.word2vec.train(self.dict_train_file)
-        # elif flag == "load":
-        #     self.word2vec.load_model()
-        # else:
-        #     print("not set word2vec model")
-        #     exit(0)
+from lib import WordVec as wv
 
 
-    def sentens_array_to_str(self,sentens_array):
+class StringOperation():
+    def __init__(self, load_flag="load"):
+
+        self.word_feat_len = lib.Const.Const().word_feat_len
+
+        fname = lib.Const.Const().word2vec_train_file
+        if load_flag == "train":
+            wv.MyWord2Vec().train(fname)
+        self.word2vec_model = wv.MyWord2Vec().load_model()
+
+
+    def sentens_array_to_str(self, sentens_array):
         __sentens = ""
         for value in sentens_array:
             __sentens += value
@@ -29,16 +27,15 @@ class StringOperation(lib.Const.Const):
     def sentens_array_to_vec(self,sentens_arr):
         __sentens_vec = []
         for value in sentens_arr:
-            __vec = self.word2vec.get_vector2(value)
+            __vec = wv.MyWord2Vec().get_vector(self.word2vec_model, value)
             __sentens_vec.append(__vec)
         return __sentens_vec
 
 
     def sentens_vec_to_sentens_arr(self,sentens_vec):
-        """ if word does not exist in bocablaly , Substitute with an alternative word """
         __arr = []
         for value in sentens_vec:
-            __word = self.word2vec.get_word(value)
+            __word = wv.MyWord2Vec().get_word(self.word2vec_model, value)
             __arr.append(__word)
         return __arr
 
@@ -46,7 +43,7 @@ class StringOperation(lib.Const.Const):
     def sentens_vec_to_sentens_arr_prob(self,sentens_vec):
         __arr = []
         for value in sentens_vec:
-            __prob_word = self.word2vec.get_some_word(value, 5)
+            __prob_word = wv.MyWord2Vec().get_some_word(self.word2vec_model, value, 5)
             __word_list = []
             __prob = []
             for p in __prob_word:

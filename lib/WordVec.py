@@ -1,7 +1,7 @@
 #単語をベクトル化
 
 import gensim
-from gensim.models import word2vec
+# from gensim.models import word2vec
 #from gensim import models as mod
 #import pylab as plt
 
@@ -10,60 +10,51 @@ import numpy as np
 # mylib
 import lib
 
-class MyWord2Vec(lib.Const.Const):
-    def __init__(self):
-        super().__init__()
+word_feat_len = lib.Const.Const().word_feat_len
+word2vec_wait = lib.Const.Const().word2vec_wait
 
+class MyWord2Vec():
 
-    def train(self,fname,saveflag="save"):
+    @staticmethod
+    def train(fname, saveflag="save"):
+        print("train word2vec")
         sentences = gensim.models.word2vec.Text8Corpus(fname)
         #model = gensim.models.word2vec.Word2Vec(sentences, size=200, window=5, workers=4, min_count=5)
-        self.model = gensim.models.word2vec.Word2Vec(sentences, size=self.word_feat_len, window=5, workers=4, min_count=1, hs=1)
+        model = gensim.models.word2vec.Word2Vec(sentences, size=word_feat_len, window=5, workers=4, min_count=1, hs=1)
         if saveflag == "save":
-            print("save "+self.word2vec_wait)
-            self.model.save(self.word2vec_wait)
+            print("save " + word2vec_wait)
+            model.save(word2vec_wait)
 
-
-    def load_model(self):
+    @staticmethod
+    def load_model():
         # 読み込み
-        print("load "+self.word2vec_wait)
-        self.model = word2vec.Word2Vec.load(self.word2vec_wait)
+        print("load " + word2vec_wait)
+        model = gensim.models.word2vec.Word2Vec.load(word2vec_wait)
+        return model
+
+    @staticmethod
+    def get_word(model, vec):
+        return model.most_similar( [ vec ], [], 1)[0][0]
 
 
-    def get_word(self,vec):
-        return self.model.most_similar( [ vec ], [], 1)[0][0]
+    @staticmethod
+    def get_some_word(model, vec, num):
+        return model.most_similar( [ vec ], [], num)
 
 
-    def get_some_word(self, vec, num):
-        return self.model.most_similar( [ vec ], [], num)
+    # def similar_words(self,st,top):
+    #     # 類似ワード出力
+    #     results = self.model.most_similar(positive=st, topn=top)
+    #     for result in results:
+    #         print(result[0], '\t', result[1])
 
+    @staticmethod
+    def get_vector(model, st):
+        return model.wv[st]
 
-    def similar_words(self,st,top):
-        # 類似ワード出力
-        results = self.model.most_similar(positive=st, topn=top)
-        for result in results:
-            print(result[0], '\t', result[1])
-
-
-    def get_vector(self,st):
-        return self.model.wv[st]
-
-
-    def get_similar_vector(self,st):
-        __st = self.model.most_similar(positive=st, topn=1)[0][0]
-        return self.model.wv[__st]
-
-
-    def get_vector2(self,st):
-        try:
-            __vec = self.model.wv[st]
-        except ValueError:
-            __st = self.model.most_similar(positive=st, topn=1)[0][0]
-            __vec = self.model.wv[__st]
-        except KeyError:
-            __st = self.model.most_similar(positive=st, topn=1)[0][0]
-            __vec = self.model.wv[__st]
-        return __vec
+    # def get_similar_vector(self,st):
+    #     __st = self.model.most_similar(positive=st, topn=1)[0][0]
+    #     return self.model.wv[__st]
 
 
 def plot(vec):
@@ -73,15 +64,13 @@ def plot(vec):
 
 
 def main():
-    net = MyWord2Vec()
-
     #net.train(const.dict_train_file,"not save")
     net.train("/aozora_text3/files/files_all_rnp.txt","not save")
 
     #net.load_model()
     # vec = net.get_vector("博士")
     # vec = net.get_vector("明智")
-    vec = net.get_vector("怪盗")
+    vec = MyWord2Vec().get_vector("怪盗")
     print(vec)
     # plot(vec)
 

@@ -46,17 +46,6 @@ def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
     return sentens_vec
 
 
-def init_word2vec(const, flag):
-    word2vec = lib.WordVec.MyWord2Vec()
-    if flag == "learn":
-        word2vec.train(const.word2vec_train_file)
-    elif flag == "load":
-        word2vec.load_model()
-    else:
-        print("not word2vec model")
-        exit(0)
-
-
 def fact_seq2seq(hred):
     context_h = hred.build_context_net()
     context_c = hred.build_context_net()
@@ -97,9 +86,6 @@ def train_main():
     # kafka
     kafka = lib.MyKafkaProducer.MyKafkaProducer()
     kafka.create_producer()
-
-    init_word2vec(const, "load")
-    # init_word2vec(const, "learn")
 
     ds = lib.DataShaping.DataShaping()
     hred = nn.HRED.HRED()
@@ -151,7 +137,6 @@ def train_main():
 
 def make_sentens_main():
     const = lib.Const.Const()
-    init_word2vec(const, "load")
     word_lists = get_word_lists(lib.Const.Const().seq2seq_train_file)
 
     ds = lib.DataShaping.DataShaping()
