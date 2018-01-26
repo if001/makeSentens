@@ -5,7 +5,7 @@ import json
 
 class KafkaConst():
     PORT="9092"
-    TOPIC='makesentens'
+    TOPIC='via-rancher'
 
     IP1="45.32.21.73"
     IP2="35.194.228.2"
