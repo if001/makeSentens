@@ -7,13 +7,14 @@ from lib import WordVec as wv
 
 class StringOperation():
     def __init__(self, load_flag="load"):
+        const = lib.Const.Const()
+        self.word_feat_len = const.word_feat_len
 
-        self.word_feat_len = lib.Const.Const().word_feat_len
-
-        fname = lib.Const.Const().word2vec_train_file
+        self.myW2V = wv.MyWord2Vec()
+        fname = const.word2vec_train_file
         if load_flag == "train":
-            wv.MyWord2Vec().train(fname)
-        self.word2vec_model = wv.MyWord2Vec().load_model()
+            self.myW2V.train(fname)
+        self.word2vec_model = self.myW2V.load_model()
 
 
     def sentens_array_to_str(self, sentens_array):
@@ -27,7 +28,7 @@ class StringOperation():
     def sentens_array_to_vec(self,sentens_arr):
         __sentens_vec = []
         for value in sentens_arr:
-            __vec = wv.MyWord2Vec().get_vector(self.word2vec_model, value)
+            __vec = self.myW2V.str_to_vector(self.word2vec_model, value)
             __sentens_vec.append(__vec)
         return __sentens_vec
 
@@ -35,7 +36,7 @@ class StringOperation():
     def sentens_vec_to_sentens_arr(self,sentens_vec):
         __arr = []
         for value in sentens_vec:
-            __word = wv.MyWord2Vec().get_word(self.word2vec_model, value)
+            __word = self.myW2V.vec_to_word(self.word2vec_model, value)
             __arr.append(__word)
         return __arr
 
@@ -43,7 +44,8 @@ class StringOperation():
     def sentens_vec_to_sentens_arr_prob(self,sentens_vec):
         __arr = []
         for value in sentens_vec:
-            __prob_word = wv.MyWord2Vec().get_some_word(self.word2vec_model, value, 5)
+            __prob_word = self.myW2V.vec_to_some_word(self.word2vec_model, value, 5)
+            print(__prob_word)
             __word_list = []
             __prob = []
             for p in __prob_word:

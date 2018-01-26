@@ -111,8 +111,8 @@ class DataShaping():
         teach_sentens = __word_lists[i+1]
         teach_sentens = self.str_op.reshape_sentens(teach_sentens)
 
-        # print(train_sentens)
-        # print(teach_sentens)
+        print(train_sentens)
+        print(teach_sentens)
         train_sentens_vec_batch = self.train_data_shaping(train_sentens_vec_batch, train_sentens)
         teach_sentens_vec_batch = self.teach_data_shaping(teach_sentens_vec_batch, teach_sentens)
         teach_target_sentens_vec_batch = self.teach_target_data_shaping(teach_target_sentens_vec_batch, teach_sentens)
@@ -160,3 +160,33 @@ class DataShaping():
 
         return train_sentens_vec_batch, teach_sentens_vec_batch, teach_target_sentens_vec_batch
 
+
+    def make_data_seq_prob(self, word_lists, batch_size, i):
+        train_sentens_vec_batch = []
+        teach_sentens_vec_batch = []
+        teach_target_sentens_vec_batch = []
+
+        __word_lists = word_lists[::]
+
+        train_sentens = __word_lists[i]
+        train_sentens = self.str_op.reshape_sentens(train_sentens)
+        train_sentens = self.str_op.rm_BOS(train_sentens)
+
+        teach_sentens = __word_lists[i+1]
+        teach_sentens = self.str_op.reshape_sentens(teach_sentens)
+
+        print(train_sentens)
+        print(teach_sentens)
+        train_sentens_vec_batch = self.train_data_shaping(train_sentens_vec_batch, train_sentens)
+        teach_sentens_vec_batch = self.teach_data_shaping(teach_sentens_vec_batch, teach_sentens)
+        teach_target_sentens_vec_batch = self.teach_target_data_shaping(teach_target_sentens_vec_batch, teach_sentens)
+
+        train_sentens_vec_batch = np.array(train_sentens_vec_batch)
+        teach_sentens_vec_batch = np.array(teach_sentens_vec_batch)
+        teach_target_sentens_vec_batch = np.array(teach_target_sentens_vec_batch)
+
+        print("train shape:", train_sentens_vec_batch.shape)
+        print("teach shape:", teach_sentens_vec_batch.shape)
+        print("target shape:", teach_target_sentens_vec_batch.shape)
+
+        return train_sentens_vec_batch, teach_sentens_vec_batch, teach_target_sentens_vec_batch

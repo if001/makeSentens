@@ -18,9 +18,11 @@ class MyKafkaProducer():
 
     def create_producer(self):
         # 送信用のクライアントを作成
-        self.producer = KafkaProducer(bootstrap_servers=[self.host1, self.host2],
-                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-
+        try:
+            self.producer = KafkaProducer(bootstrap_servers=[self.host1, self.host2],
+                                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+        except:
+            print("kafka not operate")
 
     def send_message(self, x, y):
         try:
@@ -29,6 +31,7 @@ class MyKafkaProducer():
             self.producer.send(KafkaConst.TOPIC, data)
         except:
             print("kafka not operate")
+
 
 def main():
     host1 = KafkaConst.IP1 + ':' + KafkaConst.PORT
