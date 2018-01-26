@@ -33,12 +33,12 @@ class MyWord2Vec():
         return model
 
     @staticmethod
-    def get_word(model, vec):
+    def vec_to_word(model, vec):
         return model.most_similar( [ vec ], [], 1)[0][0]
 
 
     @staticmethod
-    def get_some_word(model, vec, num):
+    def vec_to_some_word(model, vec, num):
         return model.most_similar( [ vec ], [], num)
 
 
@@ -49,7 +49,7 @@ class MyWord2Vec():
     #         print(result[0], '\t', result[1])
 
     @staticmethod
-    def get_vector(model, st):
+    def str_to_vector(model, st):
         return model.wv[st]
 
     # def get_similar_vector(self,st):

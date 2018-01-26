@@ -201,7 +201,7 @@ def make_sentens_main():
         print("--")
 
         # cal state value
-        decode_sentens_vec = np.array([decode_sentens_vec])
+        decode_sentens_vec = np.array([decode_sentens_vec[::-1]])
         state_h, state_c = encoder_model.predict(decode_sentens_vec)
         state_h = np.array(state_h)
         state_c = np.array(state_c)
