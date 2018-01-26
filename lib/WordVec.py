@@ -32,6 +32,15 @@ class MyWord2Vec():
         model = gensim.models.word2vec.Word2Vec.load(word2vec_wait)
         return model
 
+
+    def get_word(self,vec):
+        print(self.model.most_similar( [ vec ], [], 5))
+        return self.model.most_similar( [ vec ], [], 1)[0][0]
+
+    def get_some_word(self, vec, num):
+        return self.model.most_similar( [ vec ], [], 5)
+
+
     @staticmethod
     def vec_to_word(model, vec):
         return model.most_similar( [ vec ], [], 1)[0][0]
