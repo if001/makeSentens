@@ -6,20 +6,23 @@ import json
 class KafkaConst():
     PORT="9092"
     TOPIC='makesentens'
-    IP1="35.194.228.2"
-    IP2="45.76.199.23"
+
+    IP1="45.32.21.73"
+    IP2="35.194.228.2"
+    IP3="45.76.48.245"
 
 
 class MyKafkaProducer():
     def __init__(self):
-        self.host1 = KafkaConst.IP1 + ':' + KafkaConst.PORT
-        self.host2 = KafkaConst.IP2 + ':' + KafkaConst.PORT
+        self.hosts = [KafkaConst.IP1 + ':' + KafkaConst.PORT,
+                      KafkaConst.IP2 + ':' + KafkaConst.PORT,
+                      KafkaConst.IP3 + ':' + KafkaConst.PORT]
 
 
     def create_producer(self):
         # 送信用のクライアントを作成
         try:
-            self.producer = KafkaProducer(bootstrap_servers=[self.host1, self.host2],
+            self.producer = KafkaProducer(bootstrap_servers=self.hosts,
                                           value_serializer=lambda v: json.dumps(v).encode('utf-8'))
         except:
             print("kafka not operate")
