@@ -45,7 +45,7 @@ class StringOperation():
         __arr = []
         for value in sentens_vec:
             __prob_word = self.myW2V.vec_to_some_word(self.word2vec_model, value, 5)
-            print(__prob_word)
+            # print(__prob_word)
             __word_list = []
             __prob = []
             for p in __prob_word:
