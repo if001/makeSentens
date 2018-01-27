@@ -38,9 +38,8 @@ def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
 
     stop_condition = False
     while not stop_condition:
-        word_vec, h, c = decoder_model.predict([word_vec, states_h, states_c])
+        word_vec, state_h, state_c = decoder_model.predict([word_vec, states_h, states_c])
         sentens_vec.append(word_vec.reshape(len(start_token[0][0])))
-        states_value = [h, c]
         if (np.allclose(word_vec, end_token) or len(sentens_vec) == 15 ):
             stop_condition = True
     return sentens_vec
