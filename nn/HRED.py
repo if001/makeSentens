@@ -37,8 +37,8 @@ class HRED(lib.Const.Const):
         self.input_word_num = 1
         self.input_dim = self.word_feat_len
         self.output_dim = self.word_feat_len
-        self.latent_dim = 256
-        self.latent_dim2 = 512
+        self.latent_dim = 512
+
 
         tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
         self.cbks = [tb_cb]
@@ -142,6 +142,7 @@ class HRED(lib.Const.Const):
                       metrics=['accuracy'])
         model.summary()
         return model
+
 
     def train_autoencoder(self, model, encoder_input_data, decoder_input_data, decoder_target_data, meta_hh, meta_hc, meta_ch, meta_cc):
         """ Run training """
