@@ -67,8 +67,8 @@ class HRED(lib.Const.Const):
         decoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(decoder_inputs)
         decoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6)
         decoder_bi_outputs = Bi(decoder_bi_lstm)(decoder_dense_outputs)
-        # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
         decoder_outputs, output_h, output_c = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
 
         # パターン1
