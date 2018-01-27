@@ -38,7 +38,8 @@ def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
 
     stop_condition = False
     while not stop_condition:
-        word_vec, state_h, state_c = decoder_model.predict([word_vec, states_h, states_c])
+        # print("vec:",word_vec[0][0][:5]," h:",states_h[0][:5]," c:", states_c[0][:5])
+        word_vec, states_h, states_c = decoder_model.predict([word_vec, states_h, states_c])
         sentens_vec.append(word_vec.reshape(len(start_token[0][0])))
         if (np.allclose(word_vec, end_token) or len(sentens_vec) == 15 ):
             stop_condition = True
@@ -119,6 +120,10 @@ def train_main():
         train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, i)
         hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
 
+        rand = random.randint(0, len(word_lists)-1)
+        train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, rand)
+        test = hred.test_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
+        print(test)
         # kafka.send_message(i, hist.history['loss'][0])
 
         state_h, state_c = encoder_model.predict(train_data)

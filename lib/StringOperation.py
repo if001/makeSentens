@@ -53,6 +53,9 @@ class StringOperation():
                 __prob.append(p[1])
             __prob = np.array(__prob)/sum(__prob)
             __word = np.random.choice(__word_list, p=__prob)
+            # print(value)
+            # print(__word)
+            # print("")
             __arr.append(__word)
         return __arr
 

@@ -38,7 +38,7 @@ class HRED(lib.Const.Const):
         self.input_dim = self.word_feat_len
         self.output_dim = self.word_feat_len
         self.latent_dim = 512
-
+        self.latent_dim2 = 256
 
         tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
         self.cbks = [tb_cb]
@@ -67,12 +67,12 @@ class HRED(lib.Const.Const):
         decoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(decoder_inputs)
         decoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True, dropout=0.6, recurrent_dropout=0.6)
         decoder_bi_outputs = Bi(decoder_bi_lstm)(decoder_dense_outputs)
-        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.2, recurrent_dropout=0.2)
+        decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True, dropout=0.4, recurrent_dropout=0.4)
         # decoder_lstm = LSTM(self.latent_dim, return_sequences=True, return_state=True)
         decoder_outputs, output_h, output_c = decoder_lstm(decoder_bi_outputs, initial_state=encoder_states)
 
         # パターン1
-        decoder_outputs = Dense(self.output_dim, activation='tanh')(decoder_outputs)
+        decoder_outputs = Dense(self.latent_dim2, activation='tanh')(decoder_outputs)
         decoder_outputs = Dropout(0.2)(decoder_outputs)
         decoder_outputs = Dense(self.output_dim, activation='linear')(decoder_outputs)
 
@@ -95,7 +95,6 @@ class HRED(lib.Const.Const):
 
 
     def build_autoencoder(self, encoder, decoder, context_h, context_c):
-
         # encoder
         encoder_inputs = Input(shape=(None, self.input_dim))
         ei, ed, eb, el = encoder.layers
@@ -151,6 +150,10 @@ class HRED(lib.Const.Const):
                          batch_size=self.batch_size,
                          epochs=1)
         #                  # validation_split=0.2)
+        return loss
+
+    def test_autoencoder(self,  model, encoder_input_data, decoder_input_data, decoder_target_data, meta_hh, meta_hc, meta_ch, meta_cc):
+        loss = model.test_on_batch([encoder_input_data, decoder_input_data, meta_hh, meta_hc, meta_ch, meta_cc], decoder_target_data)
         return loss
 
 
