@@ -38,12 +38,12 @@ def make_sentens_vec(decoder_model, states_h, states_c, start_token, end_token):
 
     stop_condition = False
     while not stop_condition:
-        # print("vec:",word_vec[0][0][:5]," h:",states_h[0][:5]," c:", states_c[0][:5])
         word_vec, states_h, states_c = decoder_model.predict([word_vec, states_h, states_c])
         sentens_vec.append(word_vec.reshape(len(start_token[0][0])))
         if (np.allclose(word_vec, end_token) or len(sentens_vec) == 15 ):
             stop_condition = True
     return sentens_vec
+
 
 
 def fact_seq2seq(hred):
@@ -116,11 +116,12 @@ def train_main():
     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
 
-    for i in range(100000):
+    for i in range(2000,100000):
+        print("step:", i)
         train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, i)
         hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
 
-        rand = random.randint(0, len(word_lists)-1)
+        rand = random.randint(0, len(word_lists)-2)
         train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, rand)
         test = hred.test_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
         print(test)
@@ -167,10 +168,10 @@ def make_sentens_main():
 
 
     # make meta state value
-    meta_hh = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    meta_hc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
-    meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
+    meta_hh = np.array([[(random.randint(-20, 20)/10) for i in range(hred.latent_dim)]])
+    meta_hc = np.array([[(random.randint(-20, 20)/10) for i in range(hred.latent_dim)]])
+    meta_ch = np.array([[(random.randint(-20, 20)/10) for i in range(hred.latent_dim)]])
+    meta_cc = np.array([[(random.randint(-20, 20)/10) for i in range(hred.latent_dim)]])
 
     state_h, state_c = encoder_model.predict(sentens_vec_batch1)
     state_h = state_h.reshape(hred.batch_size, 1, hred.latent_dim)
@@ -191,24 +192,36 @@ def make_sentens_main():
     state_c, _, _ = context_c.predict([state_c, meta_ch, meta_cc])
     state_c = np.array(state_c)
 
-
     # predict
     for _ in range(10):
         start_token = so.sentens_array_to_vec(["BOS"])
         start_token = np.array([start_token])
         end_token = so.sentens_array_to_vec(["。"])
         end_token = np.array([end_token])
+
         decode_sentens_vec = make_sentens_vec(decoder_model, state_h, state_c, start_token, end_token)
         decode_sentens_arr = so.sentens_vec_to_sentens_arr_prob(decode_sentens_vec)
-        sentens = so.sentens_array_to_str(decode_sentens_arr)
+
+
+        end_chars = ["…。","。"]
+        end_index_list = [100000]
+        for end_char in end_chars:
+            if end_char in decode_sentens_arr:
+                end_index_list.append(decode_sentens_arr.index(end_char) + 1)
+
+        end_index = min(end_index_list)
+
+        sentens = "".join(decode_sentens_arr[:end_index])
+
         print(sentens)
         print("--")
 
         # cal state value
         decode_sentens_vec = np.array([decode_sentens_vec[::-1]])
-        state_h, state_c = encoder_model.predict(decode_sentens_vec)
+        state_h, state_c = encoder_model.predict(decode_sentens_vec[:end_index])
         state_h = np.array(state_h)
         state_c = np.array(state_c)
+
 
 def main():
     if '--train' in sys.argv:

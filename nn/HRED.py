@@ -39,6 +39,8 @@ class HRED(lib.Const.Const):
         self.output_dim = self.word_feat_len
         self.latent_dim = 512
         self.latent_dim2 = 256
+        self.latent_dim = 1024
+        self.latent_dim2 = 512
 
         tb_cb = TensorBoard(log_dir="~/tflog/", histogram_freq=1)
         self.cbks = [tb_cb]
@@ -49,7 +51,7 @@ class HRED(lib.Const.Const):
 
         encoder_inputs = Input(shape=(None, self.input_dim))
         encoder_dense_outputs = Dense(self.input_dim, activation='sigmoid')(encoder_inputs)
-        encoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True , dropout=0.6, recurrent_dropout=0.6)
+        encoder_bi_lstm = LSTM(self.latent_dim, return_sequences=True , dropout=0.4, recurrent_dropout=0.4)
         encoder_bi_outputs = Bi(encoder_bi_lstm)(encoder_dense_outputs)
         _, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2, recurrent_dropout=0.2)(encoder_bi_outputs)
 
@@ -90,7 +92,7 @@ class HRED(lib.Const.Const):
         state_h_input = Input(shape=(self.latent_dim,))
         state_c_input = Input(shape=(self.latent_dim,))
         state_value = [state_h_input, state_c_input]
-        outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True)(inputs, initial_state=state_value)
+        outputs, state_h, state_c = LSTM(self.latent_dim, return_state=True, dropout=0.2)(inputs, initial_state=state_value)
         return Model([inputs, state_h_input, state_c_input], [outputs, state_h, state_c])
 
 
@@ -133,7 +135,7 @@ class HRED(lib.Const.Const):
 
     def model_compile(self, model):
         """ complie """
-        optimizer = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08, decay=0.0)
+        optimizer = RMSprop(lr=0.001, rho=0.7, epsilon=1e-08, decay=0.0)
         loss = 'mean_squared_error'
         # loss = 'kullback_leibler_divergence'
         model.compile(optimizer=optimizer,
