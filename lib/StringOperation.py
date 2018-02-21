@@ -45,7 +45,6 @@ class StringOperation():
         __arr = []
         for value in sentens_vec:
             __prob_word = self.myW2V.vec_to_some_word(self.word2vec_model, value, 5)
-            # print(__prob_word)
             __word_list = []
             __prob = []
             for p in __prob_word:
@@ -54,7 +53,7 @@ class StringOperation():
             __prob = np.array(__prob)/sum(__prob)
             __word = np.random.choice(__word_list, p=__prob)
             # print(value)
-            # print(__word)
+            # print(__prob_word)
             # print("")
             __arr.append(__word)
         return __arr

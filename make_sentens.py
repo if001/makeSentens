@@ -116,7 +116,7 @@ def train_main():
     meta_ch = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
     meta_cc = np.array([[(random.randint(0, 10)/10) for i in range(hred.latent_dim)]])
 
-    for i in range(2000,100000):
+    for i in range(35000,200000):
         print("step:", i)
         train_data, teach_data, teach_target_data = ds.make_data_seq2(word_lists, const.batch_size, i)
         hist = hred.train_autoencoder(autoencoder, train_data, teach_data, teach_target_data, meta_hh, meta_hc, meta_ch, meta_cc)
